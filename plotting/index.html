@@ -1,11 +1,16 @@
+<html>
 <head>
   <meta charset="UTF-8">
   <!-- Plotly.js -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- jquery -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+  <script src="plotly-latest.min.js"></script>
+  <!-- jquery -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script> -->
+  <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>-->
+  <script src="jquery.min.js"></script>
+  <script src="plotspectrum.js"></script>  
 </head>
-
+<body>
 <p>
     Here's a simple Plotly plot - 
     <a href="http://bit.ly/1Or9igj">plotly.js documentation</a>
@@ -23,54 +28,5 @@
 <div class="loglinear" id="yaxislog" style="margin-left:80px;">
     <button style=";">y-axis log/linear</button>
 </div>
-
-<script>
-
-  
-  var spectrum1 = {x: [1, 2, 3, 4, 5],
-  y: [1, 2, 4, 8, 16],
-  mode: 'lines',
-  hoverinfo: 'name',
-  name: 'Moritz',
-  };
-
-  var data = [spectrum1];
-
-  var layout = {
-  title: 'TW Hydra - ObsID 6443',
-  showlegend: true
-  };
-
-  var plotlyoptions = {displaylogo: false, scrollZoom: true, showLink: false};
-  
-  Plotly.plot( 'plotarea', data, layout, plotlyoptions);
-
-
- $('.loglinear button').click(function(){
-  var btn_id = this.parentNode.id,
-  myDiv = document.getElementById("plotarea");
-  
-  if ( btn_id == 'xaxislog' ){
-  if ( myDiv.layout.xaxis.type == 'log' )
-  {
-     Plotly.relayout(myDiv, {'xaxis.type': 'linear'})
-  }
-  else
-  {
-      Plotly.relayout(myDiv, {'xaxis.type': 'log'})
-  }
-  }
-  if ( btn_id == 'yaxislog' ){
-  if ( myDiv.layout.yaxis.type == 'log' )
-  {
-     Plotly.relayout(myDiv, {'yaxis.type': 'linear'})
-  }
-  else
-  {
-      Plotly.relayout(myDiv, {'yaxis.type': 'log'})
-  }
-  }
-
-
-  });
-</script>
+</body>
+</html>
