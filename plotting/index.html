@@ -12,19 +12,18 @@
 </head>
 <body>
 <p>
-    Here's a simple Plotly plot - 
-    <a href="http://bit.ly/1Or9igj">plotly.js documentation</a>
+  Proof-of-concept for a new TGCat Plotting facility
 </p>
 
 <!-- Plots go in blank <div> elements. 
     You can size them in the plot layout,
     or give the div a size as shown here.
 -->
-<div id="plotarea" style="width:90%;height:250px;"></div>
+<div id="plotarea" style="width:90%;height:400px;"></div>
 X-Units:
 <select id="xunit">
   <option value='keV'>          keV </option>
-  <option value='Å' selected="selected">                A </option>
+  <option value="Å" selected>                A </option>
   <option value='nm'>            nm </option>
   <option value='micron'>    micron </option>
   <option value='mm'>            mm </option>
@@ -41,5 +40,6 @@ X-Units:
 </select>
 <button class="loglinear" id="xaxislog" style="margin-left:80px;">x-axis log/linear</button>
 <button class="loglinear" id="yaxislog" style="margin-left:80px;">y-axis log/linear</button>
+Redshift for features: <input type=text id="redshift" size=4 value='0.0'> (v/c) (click on red symbols in legend to show/hide).
 </body>
 </html>

@@ -1,5 +1,28 @@
 "use strict";
 
+function convertunit(){
+    var unit = $('#xunit').val()
+    switch(unit) {
+    case 'Å':
+    case 'nm':
+    case 'mm':
+    case 'm':
+    case 'micron':
+    case 'cm':
+	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
+	var f = factor[unit];
+	return {
+	    x_type: 'wavelength',
+	    x_unit: unit,
+	    xfunc: function(val){return val / f;},
+	    yfunc: function(val){return val * f;},
+	};
+    default:
+	alert('Unit: ' + unit + ' not supported.');
+    }
+};
+  
+
 function Spectrum(rawdata){
     // TBD: add safty checks: right units in header, at least x data values etc.
     this.x_lo_in = [];
@@ -39,36 +62,25 @@ function Spectrum(rawdata){
     this.xlabel = function() {return this.x_type + "[" + this.x_unit + "]"};
     this.ylabel = function() {return this.y_type + " / " + this.x_unit};
 
-    this.convert_to_xunit = function(xunit){
-	switch(xunit) {
-	case 'Å':
-	case 'nm':
-	case 'mm':
-	case 'm':
-	case 'micron':
-	case 'cm':
-	    var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
-	    var f = factor[xunit];
-	    this.x_type = 'wavelength';
-	    this.x_unit = xunit;
-	    this.x = [];
-	    this.x_mid = [];
-	    this.y = [];
-	    this.err = [];
-	    for (i = 0; i < this.n_points; i++) {
-		this.x.push(this.x_lo_in[i] / f);
-		this.x_mid.push(this.x_mid_in[i] / f);
-		this.y.push(this.y_in[i] * f);
-		this.err.push(this.err_in[i] * f);
+    this.convert_to_xunit = function(){
+	var converter = convertunit()
+	this.x_type = converter.x_type;
+	this.x_unit = converter.x_unit;
+	switch (converter.x_type) {
+	case "wavelength":
+	    {
+		this.x = this.x_lo_in.map(converter.xfunc);
+	    	this.x.push(converter.xfunc(this.x_hi_in[-1]));
+		break;
 	    }
-	    // Prevent end of plot from hangin in air
-	    this.x.push(this.x_hi_in[-1] / f);
-	    this.y.push(0);
-	    break;
-
 	default:
-	    alert('Unit: ' + xunit + ' not supported.');
-	}
+	    {alert('Conversion not supported')}
+	};
+	this.x_mid = this.x_mid_in.map(converter.xfunc);
+	this.y = this.y_in.map(converter.yfunc);
+	this.err = this.err_in.map(converter.yfunc);
+	// Prevent end of plot from hanging in air
+	this.y.push(0);
     };
 };
 
@@ -98,24 +110,58 @@ function ErrSpec(spec, linespec) {
     this.line = {width: 1, color: linespec.line.color};
 };
 
+function LineList(title, names, energies) {
+    if (names.length != energies.length)
+    { alert("Error in creating LineList.");};
+    this.text = names;
+    this.energy = energies;
+    this.wavelength = this.energy.map(function(val){return 12.389419/val});
+    this.redshifter = function(){
+	var z = parseFloat($('#redshift').val());
+	return function (wave){return wave * (1 + z)};
+    }
+    this.update = function(){
+	var converter = convertunit()
+	this.x = this.wavelength.map(this.redshifter()).map(converter.xfunc);
+	this.y = new Array(this.x.length);
+	this.y.fill(0.9);
+    };
+    this.update();
+    this.type = 'scatter';
+    this.mode = 'markers';
+    this.hoverinfo = 'x+text';
+    this.name = title;
+    this.visible = 'legendonly';
+    this.marker ={
+	color:"red",
+	symbol:"line-ns-open",
+	line:{
+            width:3
+	}
+    };
+    this.yaxis = 'y2';
+}
 //var plotlyoptions = {displaylogo: false, scrollZoom: true, showLink: false, editable: true};
-var plotlyoptions = {displaylogo: false, scrollZoom: true, showLink: true,
+var plotlyoptions = {displaylogo: false, showLink: true,
 		     linkText: 'Edit plot on external website'};
 
 
 $(document).ready(function(){
 
-    var i;
+    // Don't trust the html to set th right defaults, so do that here.
+    $('#xunit').val('Å');
+    $('#redshift').val("0.0");
+
+    
+    var hlike = new LineList("H-like lines",
+			     ['O VII', 'O VII', 'Ne X', 'Ne X', 'Mg XII', 'Mg XII'],
+			     [0.653589, 0.774679, 1.02168, 1.21102, 1.47201, 1.74489]);
+    
+			     
     // This will later be replaced with php I guess
     var rawDataURL = 'https://raw.githubusercontent.com/hamogu/TGCatweb/master/testdata/1460764540T1835972358ascii.dat'
 
     var rawdata;
-    var row;
-    var x_lo = [];
-    var x_hi = [];
-    var x_mid = [];
-    var y_read = [];
-    var err_read = [];
     
     $.get(rawDataURL, function(data, status){
         if (status != 'success'){
@@ -126,13 +172,24 @@ $(document).ready(function(){
 	var spec1 = new Spectrum(rawdata);
 	var spectrum1 = new LineSpec(spec1);
 	var err_spectrum1 = new ErrSpec(spec1, spectrum1);
-	var data = [spectrum1, err_spectrum1];
+	var data = [hlike, spectrum1, err_spectrum1];
     
 	var layout = {
 	    title: 'TW Hydra - ObsID 6443',
 	    showlegend: true,
 	    xaxis: {title: spec1.xlabel()},
 	    yaxis: {title: spec1.ylabel()},
+	    yaxis2: {
+		anchor: 'free',
+		overlaying: 'y',
+		side: 'right',
+		showticklabels: false,
+		showgrid: false,
+		zeroline: false,
+		showline: false,
+		range: [0, 1],
+		fixedrange: true,
+	     },
 	};
 
 	var plotarea = document.getElementById("plotarea");
@@ -146,20 +203,28 @@ $(document).ready(function(){
 	    Plotly.relayout(plotarea, {'xaxis.type': 'log'})
 	});
 	$('#yaxislog').click(function(){
-	    if ( plotarea.layout.xaxis.type == 'log' )
+	    if ( plotarea.layout.yaxis.type == 'log' )
 	    Plotly.relayout(plotarea, {'yaxis.type': 'linear'})
 	    else
 	    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
 	});
-	$('#xunit').change(function(){
-	    spec1.convert_to_xunit(this.value);
-	    plotarea.data[0].x = spec1.x;
-	    plotarea.data[0].y = spec1.y;
-	    plotarea.data[1].x = spec1.x_mid;
+ 	$('#xunit').change(function(){
+	    hlike.update();
+	    spec1.convert_to_xunit();
+	    plotarea.data[0].x = hlike.x;
+	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
-	    plotarea.data[1].error_y.array = spec1.err;
+	    plotarea.data[2].x = spec1.x_mid;
+	    plotarea.data[2].y = spec1.y;
+	    plotarea.data[2].error_y.array = spec1.err;
 	    plotarea.layout.xaxis.title = spec1.xlabel();
 	    plotarea.layout.yaxis.title = spec1.ylabel();
+	    Plotly.redraw(plotarea);
+	});
+	$('#redshift').change(function(){
+	    this.val(parseFloat(this.val()));
+	    hlike.update();
+	    plotarea.data[0].x = hlike.x;
 	    Plotly.redraw(plotarea);
 	});
     });
