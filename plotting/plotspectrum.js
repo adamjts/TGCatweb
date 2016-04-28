@@ -1,7 +1,9 @@
 "use strict";
+const Ang2keV = 12.389419;
 
 function convertunit(){
     var unit = $('#xunit').val()
+    var utype;
     switch(unit) {
     case 'Å':
     case 'nm':
@@ -17,6 +19,32 @@ function convertunit(){
 	    xfunc: function(val){return val / f;},
 	    yfunc: function(val){return val * f;},
 	};
+	break;
+    case 'eV':
+    case 'keV':
+    case 'MeV':
+    case 'GeV':
+    case 'TeV':
+    case 'Hz':
+    case 'kHz':
+    case 'MHz':
+    case 'GHz':
+	var factor = {'eV': 1e-3, 'keV': 1, 'MeV': 1e3, 'GeV': 1e6, 'TeV': 1e9,
+		      'Hz': 2.417989e17, 'kHz': 2.417989e14, 'MHz': 2.417989e11,
+		      'GHz': 2.417989e8}
+	var f = factor[unit];
+	if (unit.includes('eV')) {
+	    utype = 'energy';
+	} else {
+	    utype = 'frequency';
+	}
+	return {
+	    x_type: utype,
+	    x_unit: unit,
+	    xfunc: function(val){return f * Ang2keV / val;},
+	    yfunc: function(val){return val / f / Ang2keV;},
+	};
+	break;
     default:
 	alert('Unit: ' + unit + ' not supported.');
     }
@@ -68,13 +96,18 @@ function Spectrum(rawdata){
 	this.x_unit = converter.x_unit;
 	switch (converter.x_type) {
 	case "wavelength":
-	    {
-		this.x = this.x_lo_in.map(converter.xfunc);
-	    	this.x.push(converter.xfunc(this.x_hi_in[-1]));
-		break;
-	    }
+	    this.x = this.x_lo_in.map(converter.xfunc);
+	    this.x.push(converter.xfunc(this.x_hi_in[-1]));
+	    break;
+
+	case "energy":
+	case "frequency":
+	    this.x = this.x_hi_in.map(converter.xfunc);
+	    this.x.push(converter.xfunc(this.x_lo_in[0]));
+	    break;
+	    
 	default:
-	    {alert('Conversion not supported')}
+	    alert('Conversion not supported');
 	};
 	this.x_mid = this.x_mid_in.map(converter.xfunc);
 	this.y = this.y_in.map(converter.yfunc);
@@ -115,7 +148,7 @@ function LineList(title, names, energies) {
     { alert("Error in creating LineList.");};
     this.text = names;
     this.energy = energies;
-    this.wavelength = this.energy.map(function(val){return 12.389419/val});
+    this.wavelength = this.energy.map(function(val){return Ang2keV/val});
     this.redshifter = function(){
 	var z = parseFloat($('#redshift').val());
 	return function (wave){return wave * (1 + z)};
