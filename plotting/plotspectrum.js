@@ -76,7 +76,6 @@ function Spectrum(rawdata){
 	    this.err_in.push( +row[3]);
 	}
     };
-    this.n_points = this.x_mid_in.length;
     this.x = this.x_lo_in;
     this.x.push(this.x_hi_in[-1]);
     this.y = this.y_in;
@@ -97,23 +96,26 @@ function Spectrum(rawdata){
 	switch (converter.x_type) {
 	case "wavelength":
 	    this.x = this.x_lo_in.map(converter.xfunc);
+	    this.y = this.y_in.map(converter.yfunc);
+	    // Prevent end of plot from hanging in air
 	    this.x.push(converter.xfunc(this.x_hi_in[-1]));
+	    this.y.push(0);
 	    break;
 
 	case "energy":
 	case "frequency":
 	    this.x = this.x_hi_in.map(converter.xfunc);
-	    this.x.push(converter.xfunc(this.x_lo_in[0]));
+	    this.y = this.y_in.map(converter.yfunc);
+	    // Prevent end of plot from hanging in air
+	    this.x.unshift(converter.xfunc(this.x_lo_in[0]));
+	    this.y.unshift(0);
 	    break;
 	    
 	default:
 	    alert('Conversion not supported');
 	};
 	this.x_mid = this.x_mid_in.map(converter.xfunc);
-	this.y = this.y_in.map(converter.yfunc);
 	this.err = this.err_in.map(converter.yfunc);
-	// Prevent end of plot from hanging in air
-	this.y.push(0);
     };
 };
 
