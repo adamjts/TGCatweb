@@ -4,9 +4,11 @@
 var redshiftField = document.getElementById("redshift");
 
 redshiftField.onfocus = function(){
-	redshiftField.value = "";
+	this.value = "";
 };
 
 redshiftField.onblur = function(){
-	redshiftField.value = "0.0";
+	if (this.value == " "){
+		this.value = "0.0";
+	};
 };
