@@ -4,9 +4,28 @@ const exposureTime = 1e4;
 
 
 
+function convertBinUnit(){
+
+
+	var newUnit = $('#xunit').val();
+	var currentVal = $('#binSize').val();
+	var currentUnit = $("#bin_units").html();
+
+	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
+
+	var newVal = currentVal * (factor[currentUnit]/factor[newUnit]);
+
+	document.getElementById("binSize").value = newVal;
+	$("#bin_units").html(newUnit);
+
+	return 0;
+
+};
+
+
 function convertyunit(){
     var area = 0.001;
-    var binSize = 0.05;
+    var binSize = $("#binSize").val(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
     var unit = $('#yunit').val();
     var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
     var f = factor[unit];
@@ -289,6 +308,8 @@ $(document).ready(function(){
 	    plotarea.layout.xaxis.title = spec1.xlabel();
 	    plotarea.layout.yaxis.title = spec1.ylabel();
 	    Plotly.redraw(plotarea);
+
+	    convertBinUnit();
 	});
 	$('#yunit').change(function(){
 		hlike.update();
@@ -310,5 +331,8 @@ $(document).ready(function(){
 	    plotarea.data[0].x = hlike.x;
 	    Plotly.redraw(plotarea);
 	});
+	$('#binSize').change(function(){
+		binSize = this.val();
+	})
     });
 });
