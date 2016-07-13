@@ -1,5 +1,21 @@
 "use strict";
 const Ang2keV = 12.389419;
+const exposureTime = 1e4;
+
+
+
+function convertyunit(){
+	var binSize=0.00001;
+    var area = 0.001;
+    var unit = $('#yunit').val();
+    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
+    var f = factor[unit];
+    return {
+    	y_unit: unit,
+	    yfunc: function(val){return val * f;}, //NEED TO FIGURE OUT WHAT THESE DO.
+	};
+};
+
 
 function convertunit(){
     var unit = $('#xunit').val()
@@ -117,6 +133,13 @@ function Spectrum(rawdata){
 	this.x_mid = this.x_mid_in.map(converter.xfunc);
 	this.err = this.err_in.map(converter.yfunc);
     };
+
+    this.convert_to_yunit = function(){
+    	var converter = convertyunit()
+    	this.y = this.y_in.map(converter.yfunc);
+    	this.y.push(0);
+    };
+
 };
 
 function LineSpec(spec) {
@@ -255,6 +278,20 @@ $(document).ready(function(){
 	    plotarea.layout.xaxis.title = spec1.xlabel();
 	    plotarea.layout.yaxis.title = spec1.ylabel();
 	    Plotly.redraw(plotarea);
+	});
+	$('#yunit').change(function(){
+		hlike.update();
+		spec1.convert_to_yunit();
+		plotarea.data[0].x = hlike.x;
+	    plotarea.data[1].x = spec1.x;
+	    plotarea.data[1].y = spec1.y;
+	    plotarea.data[2].x = spec1.x_mid;
+	    plotarea.data[2].y = spec1.y;
+	    plotarea.data[2].error_y.array = spec1.err;
+	    plotarea.layout.xaxis.title = spec1.xlabel();
+	    plotarea.layout.yaxis.title = spec1.ylabel();
+	    Plotly.redraw(plotarea);
+
 	});
 	$('#redshift').change(function(){
 	    this.val(parseFloat(this.val()));

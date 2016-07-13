@@ -8,7 +8,8 @@ redshiftField.onfocus = function(){
 };
 
 redshiftField.onblur = function(){
-	if (this.value == " "){
+	if (this.value == " " || this.value == ""){
 		this.value = "0.0";
 	};
 };
+
