@@ -5,8 +5,8 @@ const exposureTime = 1e4;
 
 
 function convertyunit(){
-	var binSize=0.00001;
     var area = 0.001;
+    var binSize = 0.05;
     var unit = $('#yunit').val();
     var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
     var f = factor[unit];
@@ -76,7 +76,7 @@ function Spectrum(rawdata){
     this.err_in = [];
     this.x_unit_in = 'Å';
     this.x_type_in = 'wavelength';
-    this.y_type_in = 'counts / s';
+    this.y_type_in = 'counts / s / Å';
 
     var i, row;
     for (i = 0; i < rawdata.length; i++) {
@@ -103,7 +103,7 @@ function Spectrum(rawdata){
     this.y_type = this.y_type_in;
 
     this.xlabel = function() {return this.x_type + "[" + this.x_unit + "]"};
-    this.ylabel = function() {return this.y_type + " / " + this.x_unit};
+    this.ylabel = function() {return this.y_type};
 
     this.convert_to_xunit = function(){
 	var converter = convertunit()
@@ -138,6 +138,17 @@ function Spectrum(rawdata){
     	var converter = convertyunit()
     	this.y = this.y_in.map(converter.yfunc);
     	this.y.push(0);
+    	switch(converter.y_unit){
+    		case 'counts/X/s':
+    			this.y_type = 'counts / s / ' + this.x_unit;
+    			break;
+    		case 'counts/bin':
+    			this.y_type = 'counts / bin'
+    			break;
+    		default:
+    			this.y_type = 'default';
+    			break;
+    	};
     };
 
 };
