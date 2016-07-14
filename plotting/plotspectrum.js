@@ -128,6 +128,7 @@ function Spectrum(rawdata){
 	var converter = convertunit()
 	this.x_type = converter.x_type;
 	this.x_unit = converter.x_unit;
+	this.convert_to_yunit();
 	switch (converter.x_type) {
 	case "wavelength":
 	    this.x = this.x_lo_in.map(converter.xfunc);
