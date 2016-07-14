@@ -13,7 +13,7 @@ function convertBinUnit(){
 
 	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
 
-	var newVal = currentVal * (factor[newUnit]/factor[currentUnit]);
+	var newVal = currentVal * (factor[currentUnit]/factor[newUnit]);
 
 	document.getElementById("binSize").value = newVal;
 	$("#bin_units").html(newUnit);
@@ -34,6 +34,7 @@ function convertyunit(){
 	    yfunc: function(val){return val * f;}, //NEED TO FIGURE OUT WHAT THESE DO.
 	};
 };
+
 
 
 function convertunit(){
@@ -128,11 +129,11 @@ function Spectrum(rawdata){
 	var converter = convertunit()
 	this.x_type = converter.x_type;
 	this.x_unit = converter.x_unit;
-	this.convert_to_yunit();
+	this.update_ylabel_scale();
 	switch (converter.x_type) {
 	case "wavelength":
 	    this.x = this.x_lo_in.map(converter.xfunc);
-	    this.y = this.y_in.map(converter.yfunc);
+	    //this.y = this.y_in.map(converter.yfunc); // I"M NOT SURE WHY THIS COMMAND USED TO BE HERE,
 	    // Prevent end of plot from hanging in air
 	    this.x.push(converter.xfunc(this.x_hi_in[-1]));
 	    this.y.push(0);
@@ -154,6 +155,15 @@ function Spectrum(rawdata){
 	this.err = this.err_in.map(converter.yfunc);
     };
 
+    this.update_ylabel_scale = function(){
+    	var xunit = $("#xunit").val();
+    	var yunit = $("#yunit").val();
+    	switch(yunit){
+    		case 'counts/X/s':
+    			this.y_type = 'counts / s / ' + xunit;
+    	};
+    };
+
     this.convert_to_yunit = function(){
     	var converter = convertyunit()
     	this.y = this.y_in.map(converter.yfunc);
@@ -169,6 +179,8 @@ function Spectrum(rawdata){
     			this.y_type = 'default';
     			break;
     	};
+
+
     };
 
 };
