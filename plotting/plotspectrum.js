@@ -13,7 +13,7 @@ function convertBinUnit(){
 
 	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
 
-	var newVal = currentVal * (factor[currentUnit]/factor[newUnit]);
+	var newVal = currentVal * (factor[newUnit]/factor[currentUnit]);
 
 	document.getElementById("binSize").value = newVal;
 	$("#bin_units").html(newUnit);
