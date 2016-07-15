@@ -14,6 +14,8 @@ function convertBinUnit(){
 	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
 
 	var newVal = currentVal * (factor[currentUnit]/factor[newUnit]);
+	newVal = parseFloat(newVal.toPrecision(2));
+	newVal = newVal.toExponential();
 
 	document.getElementById("binSize").value = newVal;
 	$("#bin_units").html(newUnit);
