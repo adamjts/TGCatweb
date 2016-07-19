@@ -8,14 +8,16 @@ function convertBinUnit(){
 
 
 	var newUnit = $('#xunit').val();
-	var currentVal = $('#binSize').val();
+	var currentVal = $('#binSize').html();
 	var currentUnit = $("#bin_units").html();
 
 	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
 
-	var newVal = currentVal * (factor[newUnit]/factor[currentUnit]);
+	var newVal = currentVal * (factor[currentUnit]/factor[newUnit]);
+	newVal = parseFloat(newVal.toPrecision(2));
+	newVal = newVal.toExponential();
 
-	document.getElementById("binSize").value = newVal;
+	$("#binSize").html(newVal);
 	$("#bin_units").html(newUnit);
 
 	return 0;
@@ -25,7 +27,7 @@ function convertBinUnit(){
 
 function convertyunit(){
     var area = 0.001;
-    var binSize = $("#binSize").val(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
+    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
     var unit = $('#yunit').val();
     var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
     var f = factor[unit];
@@ -34,6 +36,18 @@ function convertyunit(){
 	    yfunc: function(val){return val * f;}, //NEED TO FIGURE OUT WHAT THESE DO.
 	};
 };
+
+function updateBinSize(){
+	var binSize = $('#binFactor').val() * 0.05; //In Angstroms
+	var currentUnits = $('#bin_units').html();
+	var factor = {'Å': 1, 'nm': 0.1, 'micron': 1e-4, 'mm': 1e-7, 'cm': 1e-8, 'm':1e-10};
+
+	binSize = binSize * factor[currentUnits];
+
+	$('#binSize').html(binSize);
+
+};
+
 
 
 function convertunit(){
@@ -128,11 +142,11 @@ function Spectrum(rawdata){
 	var converter = convertunit()
 	this.x_type = converter.x_type;
 	this.x_unit = converter.x_unit;
-	this.convert_to_yunit();
+	this.update_ylabel_scale();
 	switch (converter.x_type) {
 	case "wavelength":
 	    this.x = this.x_lo_in.map(converter.xfunc);
-	    this.y = this.y_in.map(converter.yfunc);
+	    //this.y = this.y_in.map(converter.yfunc); // I"M NOT SURE WHY THIS COMMAND USED TO BE HERE,
 	    // Prevent end of plot from hanging in air
 	    this.x.push(converter.xfunc(this.x_hi_in[-1]));
 	    this.y.push(0);
@@ -154,6 +168,15 @@ function Spectrum(rawdata){
 	this.err = this.err_in.map(converter.yfunc);
     };
 
+    this.update_ylabel_scale = function(){
+    	var xunit = $("#xunit").val();
+    	var yunit = $("#yunit").val();
+    	switch(yunit){
+    		case 'counts/X/s':
+    			this.y_type = 'counts / s / ' + xunit;
+    	};
+    };
+
     this.convert_to_yunit = function(){
     	var converter = convertyunit()
     	this.y = this.y_in.map(converter.yfunc);
@@ -169,6 +192,8 @@ function Spectrum(rawdata){
     			this.y_type = 'default';
     			break;
     	};
+
+
     };
 
 };
@@ -334,6 +359,10 @@ $(document).ready(function(){
 	});
 	$('#binSize').change(function(){
 		binSize = this.val();
-	})
+	});
+
+	document.getElementById("binFactor").onblur = function(){
+		updateBinSize();
+	};
     });
 });
