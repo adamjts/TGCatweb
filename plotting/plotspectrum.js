@@ -8,7 +8,7 @@ function convertBinUnit(){
 
 
 	var newUnit = $('#xunit').val();
-	var currentVal = $('#binSize').val();
+	var currentVal = $('#binSize').html();
 	var currentUnit = $("#bin_units").html();
 
 	var factor = {'Å': 1, 'nm': 10, 'micron': 1e4, 'mm': 1e7, 'cm': 1e8, 'm':1e10};
@@ -17,7 +17,7 @@ function convertBinUnit(){
 	newVal = parseFloat(newVal.toPrecision(2));
 	newVal = newVal.toExponential();
 
-	document.getElementById("binSize").value = newVal;
+	$("#binSize").html(newVal);
 	$("#bin_units").html(newUnit);
 
 	return 0;
@@ -27,7 +27,7 @@ function convertBinUnit(){
 
 function convertyunit(){
     var area = 0.001;
-    var binSize = $("#binSize").val(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
+    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
     var unit = $('#yunit').val();
     var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
     var f = factor[unit];
@@ -35,6 +35,17 @@ function convertyunit(){
     	y_unit: unit,
 	    yfunc: function(val){return val * f;}, //NEED TO FIGURE OUT WHAT THESE DO.
 	};
+};
+
+function updateBinSize(){
+	var binSize = $('#binFactor').val() * 0.05; //In Angstroms
+	var currentUnits = $('#bin_units').html();
+	var factor = {'Å': 1, 'nm': 0.1, 'micron': 1e-4, 'mm': 1e-7, 'cm': 1e-8, 'm':1e-10};
+
+	binSize = binSize * factor[currentUnits];
+
+	$('#binSize').html(binSize);
+
 };
 
 
@@ -348,6 +359,10 @@ $(document).ready(function(){
 	});
 	$('#binSize').change(function(){
 		binSize = this.val();
-	})
+	});
+
+	document.getElementById("binFactor").onblur = function(){
+		updateBinSize();
+	};
     });
 });
