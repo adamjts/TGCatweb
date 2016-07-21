@@ -89,19 +89,34 @@ function convertunit(){
 
 
 
-function convertyunit(){
-	var area = 1;
+function convertyunit(area){
     var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
     var unit = $('#yunit').val();
-    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
-    var f = factor[unit];
-    return {
-    	y_unit: unit,
-	    yfunc: function(val){return val * f;},
+    if (unit == 'counts/X/s' || unit == 'counts/bin'){
+    	var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize)};
+    	var f = factor[unit];
+    	return {
+    		y_unit: unit,
+	    	yfunc: function(val){return val * f;},
+	    };
 	};
+	if (unit == 'Fy'){
+		var factor = {'Fy' : (binSize), 'Fy/X' : 1/area};
+    	var f = factor[unit];
+    	//return {
+    	//	y_unit: unit,
+	    //	yfunc: function(val){return val * f;},
+	    //};
+	    return {
+    		y_unit: unit,
+	    	yfunc: function(val){return val * f;},
+	    };
+
+	};
+
 };
 
-function divideArrays(a,b){
+function divideArrays(a, b){
 	for(i=0; i<a.length; i++){
 		a[i] = a[i]/b[i]
 	};
@@ -191,7 +206,7 @@ function Spectrum(rawdata){
 
     this.convert_to_yunit = function(){
     	var area = this.effective_area_in;
-    	var converter = convertyunit();
+    	var converter = convertyunit(area);
     	switch(converter.y_unit){
     		case 'counts/X/s':
     		case 'counts/bin':
@@ -199,8 +214,9 @@ function Spectrum(rawdata){
     		break;
     		case 'Fy':
     		this.y = this.y_in.map(converter.yfunc);
-    		this.y = divideArrays(this.y, area);
-    		//divide by the correct effective areas
+    		for (i=0; i < this.y.length; i++){
+    			this.y[i] = this.y[i]/area[i];
+    		}
     		break;
     		default:
     		this.y = this.y_in.map(converter.yfunc);
