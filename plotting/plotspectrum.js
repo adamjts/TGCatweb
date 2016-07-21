@@ -25,18 +25,6 @@ function convertBinUnit(){
 };
 
 
-function convertyunit(){
-    var area = 0.001;
-    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
-    var unit = $('#yunit').val();
-    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
-    var f = factor[unit];
-    return {
-    	y_unit: unit,
-	    yfunc: function(val){return val * f;}, //NEED TO FIGURE OUT WHAT THESE DO.
-	};
-};
-
 function updateBinSize(){
 	var binSize = $('#binFactor').val() * 0.05; //In Angstroms
 	var currentUnits = $('#bin_units').html();
@@ -98,7 +86,20 @@ function convertunit(){
 	alert('Unit: ' + unit + ' not supported.');
     }
 };
-  
+
+
+
+function convertyunit(area){
+    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
+    var unit = $('#yunit').val();
+    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
+    var f = factor[unit];
+    return {
+    	y_unit: unit,
+	    yfunc: function(val){return val * f;},
+	};
+};
+
 
 function Spectrum(rawdata){
     // TBD: add safty checks: right units in header, at least x data values etc.
@@ -107,9 +108,12 @@ function Spectrum(rawdata){
     this.x_mid_in = [];
     this.y_in = [];
     this.err_in = [];
+    this.effective_area_in=[];
     this.x_unit_in = 'Å';
     this.x_type_in = 'wavelength';
     this.y_type_in = 'counts / s / Å';
+
+
 
     var i, row;
     for (i = 0; i < rawdata.length; i++) {
@@ -123,6 +127,7 @@ function Spectrum(rawdata){
 	    this.x_mid_in.push( 0.5 * row[0] + 0.5 * row[1]);
 	    this.y_in.push( +row[2]);
 	    this.err_in.push( +row[3]);
+	    this.effective_area_in.push(+ Math.random()); //THIS WILL EVENTUALLY HAVE TO BE THE CORRECT DATA FROM ROW[].... right now the number is randomly generated just for skeleton purposes
 	}
     };
     this.x = this.x_lo_in;
@@ -178,15 +183,36 @@ function Spectrum(rawdata){
     };
 
     this.convert_to_yunit = function(){
-    	var converter = convertyunit()
-    	this.y = this.y_in.map(converter.yfunc);
-    	this.y.push(0);
+    	var area = this.effective_area_in;
+    	var converter = convertyunit(area);
+    	switch(converter.y_unit){
+    		case 'counts/X/s':
+    		case 'counts/bin':
+    		this.y = this.y_in.map(converter.yfunc);
+    		break;
+    		case 'Fy':
+    		this.y = this.y_in.map(converter.yfunc);
+    		
+    		//divide by the correct effective areas
+    		break;
+    		default:
+    		this.y = this.y_in.map(converter.yfunc);
+    		break;
+    	};
+
+    	//this.y = this.y_in.map(converter.yfunc);
+    	//this.y.push(0);
+
+    	//This changes the label
     	switch(converter.y_unit){
     		case 'counts/X/s':
     			this.y_type = 'counts / s / ' + this.x_unit;
     			break;
     		case 'counts/bin':
     			this.y_type = 'counts / bin'
+    			break;
+    		case 'Fy':
+    			this.y_type = 'Fy'; //THIS SHOULD BE THE ACUAL NAME... Photons per area per second?
     			break;
     		default:
     			this.y_type = 'default';
@@ -364,5 +390,8 @@ $(document).ready(function(){
 	document.getElementById("binFactor").onblur = function(){
 		updateBinSize();
 	};
+
+	$("#display").html(spec1.y);
+
     });
 });
