@@ -100,8 +100,8 @@ function convertyunit(area){
 	    	yfunc: function(val){return val * f;},
 	    };
 	};
-	if (unit == 'Fy'){
-		var factor = {'Fy' : (binSize), 'Fy/X' : 1/area};
+	if (unit == 'Fy' || unit == 'Fy/X'){
+		var factor = {'Fy' : (binSize), 'Fy/X' : 1};
     	var f = factor[unit];
     	//return {
     	//	y_unit: unit,
@@ -213,6 +213,7 @@ function Spectrum(rawdata){
     		this.y = this.y_in.map(converter.yfunc);
     		break;
     		case 'Fy':
+    		case 'Fy/X':
     		this.y = this.y_in.map(converter.yfunc);
     		for (i=0; i < this.y.length; i++){
     			this.y[i] = this.y[i]/area[i];
@@ -237,6 +238,8 @@ function Spectrum(rawdata){
     		case 'Fy':
     			this.y_type = 'Fy'; //THIS SHOULD BE THE ACUAL NAME... Photons per area per second?
     			break;
+    		case 'Fy/X':
+    			this.y_type = 'Fy/X';
     		default:
     			this.y_type = 'default';
     			break;
