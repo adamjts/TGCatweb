@@ -149,7 +149,7 @@ function Spectrum(rawdata){
 	    this.x_mid_in.push( 0.5 * row[0] + 0.5 * row[1]);
 	    this.y_in.push( +row[2]);
 	    this.err_in.push( +row[3]);
-	    this.effective_area_in.push(+ Math.random()); //THIS WILL EVENTUALLY HAVE TO BE THE CORRECT DATA FROM ROW[].... right now the number is randomly generated just for skeleton purposes
+	    this.effective_area_in.push(+ Math.random()); //THIS WILL EVENTUALLY HAVE TO BE THE CORRECT DATA FROM ROW[4?].... right now the number is randomly generated just for skeleton purposes
 	}
     };
     this.x = this.x_lo_in;
