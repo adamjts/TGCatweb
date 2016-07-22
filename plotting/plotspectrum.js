@@ -201,6 +201,10 @@ function Spectrum(rawdata){
     	switch(yunit){
     		case 'counts/X/s':
     			this.y_type = 'counts / s / ' + xunit;
+    			break;
+    		case 'Fy/X':
+    			this.y_type = 'photons / area / second / '+ xunit;
+    			break;
     	};
     };
 
@@ -236,10 +240,11 @@ function Spectrum(rawdata){
     			this.y_type = 'counts / bin'
     			break;
     		case 'Fy':
-    			this.y_type = 'Fy'; //THIS SHOULD BE THE ACUAL NAME... Photons per area per second?
+    			this.y_type = 'photons / area / second'; //THIS SHOULD BE THE ACUAL NAME... Photons per area per second?
     			break;
     		case 'Fy/X':
-    			this.y_type = 'Fy/X';
+    			this.y_type = 'photons / area / second / ' + this.x_unit;
+    			break;
     		default:
     			this.y_type = 'default';
     			break;
