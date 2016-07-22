@@ -112,6 +112,15 @@ function convertyunit(area){
 	    	yfunc: function(val){return val * f;},
 	    };
 
+	if (unit == 'FX' || unit == 'XFX'){ //-********************************THIS IS IN PROGRESS**************
+		var factor = {'FX': some_factor, 'XFX': another_factor};
+		var f = factor[unit];
+		return{
+			y_unit: unit,
+			yfunc : function(val){return val * f;},
+		};
+	};
+
 	};
 
 };
