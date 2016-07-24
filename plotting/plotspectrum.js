@@ -258,6 +258,12 @@ function Spectrum(rawdata){
     		case 'Fy/X':
     			this.y_type = 'photons / area / second / ' + this.x_unit;
     			break;
+    		case 'FX':
+    			this.y_type = 'KeV / area / second / ' + this.x_unit;
+    			break;
+    		case 'XFX':
+    			this.y_type = 'KeV / area / second';
+    			break;
     		default:
     			this.y_type = 'default';
     			break;
