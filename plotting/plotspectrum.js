@@ -211,6 +211,9 @@ function Spectrum(rawdata){
     		case 'Fy/X':
     			this.y_type = 'photons / area / second / '+ xunit;
     			break;
+    		case 'FX':
+    			this.y_type = 'KeV / area / second / ' + this.x_unit;
+    			break;
     	};
     };
 
