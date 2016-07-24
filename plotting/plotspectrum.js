@@ -113,11 +113,11 @@ function convertyunit(area){
 	    };
 	};
 
-
 	if (unit == 'FX' || unit == 'XFX'){ //-********************************THIS IS IN PROGRESS**************
-		var h = 6.626 ;//e-34;
-		var c = 3.0;//e8;
-		var factor = {'FX': h*c, 'XFX': h*c};
+		var h = 6.626e-34;
+		var c = 3.0e8;
+		var joules_to_KeV = 6.242e15;
+		var factor = {'FX': h*c*joules_to_KeV, 'XFX': h*c*joules_to_KeV*binSize};
 		var f = factor[unit];
 		return{
 			y_unit: unit,
@@ -237,7 +237,7 @@ function Spectrum(rawdata){
     			};
     			break;
     		default:
-    		this.y = this.y_in.map(converter.yfunc);
+    			this.y = this.y_in.map(converter.yfunc);
     		break;
     	};
 
