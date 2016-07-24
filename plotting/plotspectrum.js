@@ -111,26 +111,23 @@ function convertyunit(area){
     		y_unit: unit,
 	    	yfunc: function(val){return val * f;},
 	    };
+	};
+
 
 	if (unit == 'FX' || unit == 'XFX'){ //-********************************THIS IS IN PROGRESS**************
-		var factor = {'FX': some_factor, 'XFX': another_factor};
+		var h = 6.626 ;//e-34;
+		var c = 3.0;//e8;
+		var factor = {'FX': h*c, 'XFX': h*c};
 		var f = factor[unit];
 		return{
 			y_unit: unit,
 			yfunc : function(val){return val * f;},
 		};
-	};
 
 	};
 
 };
 
-function divideArrays(a, b){
-	for(i=0; i<a.length; i++){
-		a[i] = a[i]/b[i]
-	};
-	return a;
-};
 
 function Spectrum(rawdata){
     // TBD: add safty checks: right units in header, at least x data values etc.
@@ -223,15 +220,22 @@ function Spectrum(rawdata){
     	switch(converter.y_unit){
     		case 'counts/X/s':
     		case 'counts/bin':
-    		this.y = this.y_in.map(converter.yfunc);
-    		break;
+    			this.y = this.y_in.map(converter.yfunc);
+    			break;
     		case 'Fy':
     		case 'Fy/X':
-    		this.y = this.y_in.map(converter.yfunc);
-    		for (i=0; i < this.y.length; i++){
-    			this.y[i] = this.y[i]/area[i];
-    		}
-    		break;
+    			this.y = this.y_in.map(converter.yfunc);
+    			for (i=0; i < this.y.length; i++){
+    				this.y[i] = this.y[i]/area[i];
+    			};
+    			break;
+    		case 'FX':
+    		case 'XFX':
+    			this.y = this.y_in.map(converter.yfunc);
+    			for (i=0; i < this.y.length; i++){
+    				this.y[i] = this.y[i] / (this.x_mid_in[i]*1.0e-10);
+    			};
+    			break;
     		default:
     		this.y = this.y_in.map(converter.yfunc);
     		break;
@@ -431,7 +435,7 @@ $(document).ready(function(){
 		updateBinSize();
 	};
 
-	$("#display").html(spec1.y);
+	$("#display").html(spec1.y[0]);
 
     });
 });
