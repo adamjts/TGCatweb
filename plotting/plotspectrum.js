@@ -236,7 +236,7 @@ function Spectrum(rawdata){
     		case 'XFX':
     			this.y = this.y_in.map(converter.yfunc);
     			for (i=0; i < this.y.length; i++){
-    				this.y[i] = this.y[i] / (this.x_mid_in[i]*1.0e-10);
+    				this.y[i] = this.y[i] / (area[i]*this.x_mid_in[i]*1.0e-10);
     			};
     			break;
     		default:
