@@ -275,6 +275,24 @@ function Spectrum(rawdata){
 
     };
 
+    this.updateBins = function(){ //******************************************** THIS IS SUPER NOT DONE	
+    	//CODE
+    	var binFactor = $("#binFactor").val();
+    	for (i=0; i < this.y.length/binFactor; i++){
+
+    		this.x[i]=this.x[i*binFactor];
+
+    		this.y[i] = 0;
+
+    		for (j = 0; j < binFactor; j++ ){
+    			this.y[i] = this.y[i] + this.y[(i*binFactor)+j];
+    		};
+    	};
+    	var end = Math.floor(this.x.length / binFactor);
+    	this.x = this.x.slice(0, end);
+    	this.y = this.y.slice(0, end);
+    };
+
 };
 
 function LineSpec(spec) {
@@ -442,9 +460,19 @@ $(document).ready(function(){
 
 	document.getElementById("binFactor").onblur = function(){
 		updateBinSize();
+		spec1.updateBins();
+		plotarea.data[0].x = hlike.x;
+	    plotarea.data[1].x = spec1.x;
+	    plotarea.data[1].y = spec1.y;
+	    plotarea.data[2].x = spec1.x_mid;
+	    plotarea.data[2].y = spec1.y;
+	    plotarea.data[2].error_y.array = spec1.err;
+	    plotarea.layout.xaxis.title = spec1.xlabel();
+	    plotarea.layout.yaxis.title = spec1.ylabel();
+	    Plotly.redraw(plotarea);
 	};
 
-	$("#display").html(spec1.y[0]);
+	$("#display").html(spec1.x_mid.length);
 
     });
 });
