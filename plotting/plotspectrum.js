@@ -92,6 +92,20 @@ function convertunit(){
 function convertyunit(area){
     var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
     var unit = $('#yunit').val();
+
+    var h = 6.626e-34;
+	var c = 3.0e8;
+	var joules_to_KeV = 6.242e15;
+
+    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize), 'Fy/X' : 1, 'FX': h*c*joules_to_KeV, 'XFX': h*c*joules_to_KeV*binSize};
+    var f = factor[unit];
+    //not all conversions are complete... some functionality is still in the other function convert_to_y_unit...
+    return{
+		y_unit: unit,
+		yfunc : function(val){return val * f;},
+	};
+
+/*
     if (unit == 'counts/X/s' || unit == 'counts/bin'){
     	var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize)};
     	var f = factor[unit];
@@ -125,6 +139,7 @@ function convertyunit(area){
 		};
 
 	};
+	*/
 
 };
 
@@ -362,6 +377,7 @@ $(document).ready(function(){
     // Don't trust the html to set th right defaults, so do that here.
     $('#xunit').val('Å');
     $('#redshift').val("0.0");
+
 
     
     var hlike = new LineList("H-like lines",
