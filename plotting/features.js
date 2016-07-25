@@ -4,6 +4,7 @@
 var redshiftField = document.getElementById("redshift");
 var binSizeField = document.getElementById("binSize");
 
+
 redshiftField.onfocus = function(){
 	this.value = "";
 };
@@ -13,6 +14,8 @@ redshiftField.onblur = function(){
 		this.value = "0.0";
 	};
 };
+
+
 
 
 

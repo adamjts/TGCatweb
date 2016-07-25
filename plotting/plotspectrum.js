@@ -290,22 +290,24 @@ function Spectrum(rawdata){
 
     };
 
-    this.updateBins = function(){ //******************************************** THIS IS SUPER NOT DONE	
+    this.updateBins = function(binFactor){ //******************************************** THIS IS SUPER NOT DONE	
     	//CODE
-    	var binFactor = $("#binFactor").val();
+    	numloops = 0;
     	for (i=0; i < this.y.length/binFactor; i++){
 
     		this.x[i]=this.x[i*binFactor];
 
     		this.y[i] = 0;
 
+    		numloops++;
+
     		for (j = 0; j < binFactor; j++ ){
     			this.y[i] = this.y[i] + this.y[(i*binFactor)+j];
     		};
     	};
     	var end = Math.floor(this.x.length / binFactor);
-    	this.x = this.x.slice(0, end);
-    	this.y = this.y.slice(0, end);
+    	this.x = this.x.slice(0, numloops);
+    	this.y = this.y.slice(0, numloops);
     };
 
 };
@@ -475,13 +477,20 @@ $(document).ready(function(){
 	});
 
 	document.getElementById("binFactor").onblur = function(){
-		updateBinSize();
+
+		if (this.value == 0){
+			alert("0 is not a valid bin size");
+			this.value = 1;
+		};
+
+		var binFactor = $("#binFactor").val();
+		updateBinSize(binFactor);
 		spec1.updateBins();
 		plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
-	    plotarea.data[2].x = spec1.x_mid;
-	    plotarea.data[2].y = spec1.y;
+	    //plotarea.data[2].x = spec1.x_mid;
+	    //plotarea.data[2].y = spec1.y;
 	    plotarea.data[2].error_y.array = spec1.err;
 	    plotarea.layout.xaxis.title = spec1.xlabel();
 	    plotarea.layout.yaxis.title = spec1.ylabel();
