@@ -489,7 +489,7 @@ $(document).ready(function(){
 
 		var binFactor = $("#binFactor").val();
 		updateBinSize();
-		spec1.updateBins(binFactor);
+		spec1.updateBins(binFactor); // RIGHT NOW THIS ONLY WORKS FOR THE FIRST CONVERSION!!!!!.... need to make work for following conversions
 		plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
