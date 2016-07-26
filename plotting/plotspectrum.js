@@ -292,30 +292,21 @@ function Spectrum(rawdata){
     this.updateBins = function(binFactor){ //******************************************** THIS IS SUPER NOT DONE	
     	//CODE
     	numloops = 0;
+
+    	// have to convert the binsize to factor 1 again... make copies of all arrays, then construct the new this.x etc using this new arrays...
+
     	this.x = [];
     	this.y = [];
     	this.x_mid = [];
+
     	for (i=0; i < this.y_in.length/binFactor; i++){
     		numloops++;
 
     		this.x.push(this.x_lo_in[i*binFactor]);
     		this.x_mid.push(this.x_mid_in[i*binFactor])
 
-    		//this.y[i] = 0;
-
-
     		this.y.push(this.y_in.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0));
-
-    		/*
-    		for (j = 0; j < binFactor; j++ ){
-    			this.y[i] = this.y[i] + this.y[(i*binFactor)+j];
-    		};
-    		*/
     	};
-    	//var end = Math.floor(this.x.length / binFactor);
-    	//this.x = this.x.slice(0, numloops);
-    	//this.y = this.y.slice(0, numloops);
-    	//this.x_mid = this.x_mid.slice(0,numloops);
     };
 
 };
@@ -494,7 +485,7 @@ $(document).ready(function(){
 			spec1.updateBins(binFactor); // RIGHT NOW THIS ONLY WORKS FOR THE FIRST CONVERSION!!!!!.... need to make work for following conversions
 			
 			if ($("#xunit") != 'Å'){
-				//spec1.convert_to_xunit();
+				//spec1.convert_to_xunit(); //----- problem here is that the conversions assume the same bin size... they use spec1.y_in....
 			};
 			if ($("#yunit") != 'counts/X/Second'){
 				//spec1.convert_to_yunit();
