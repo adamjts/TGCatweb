@@ -1,7 +1,6 @@
-"use strict";
+//"use strict";
 const Ang2keV = 12.389419;
 const exposureTime = 1e4;
-
 
 
 function convertBinUnit(){
@@ -295,15 +294,19 @@ function Spectrum(rawdata){
     	numloops = 0;
     	for (i=0; i < this.y.length/binFactor; i++){
 
-    		this.x[i]=this.x[i*binFactor];
+    		this.x[i] = this.x[i*binFactor];
 
     		this.y[i] = 0;
 
     		numloops++;
 
+    		this.y[i]= this.y.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0);
+
+    		/*
     		for (j = 0; j < binFactor; j++ ){
     			this.y[i] = this.y[i] + this.y[(i*binFactor)+j];
     		};
+    		*/
     	};
     	var end = Math.floor(this.x.length / binFactor);
     	this.x = this.x.slice(0, numloops);
@@ -398,7 +401,7 @@ $(document).ready(function(){
 	    return;
 	}
 	rawdata = Plotly.d3.tsv.parseRows(data);
-	var spec1 = new Spectrum(rawdata);
+	spec1 = new Spectrum(rawdata);
 	var spectrum1 = new LineSpec(spec1);
 	var err_spectrum1 = new ErrSpec(spec1, spectrum1);
 	var data = [hlike, spectrum1, err_spectrum1];
@@ -478,19 +481,20 @@ $(document).ready(function(){
 
 	document.getElementById("binFactor").onblur = function(){
 
-		if (this.value == 0){
-			alert("0 is not a valid bin size");
+		if ((this.value == 0) || (isNaN(this.value))){
+			alert("Not a valid bin size");
 			this.value = 1;
 		};
 
+
 		var binFactor = $("#binFactor").val();
-		updateBinSize(binFactor);
-		spec1.updateBins();
+		updateBinSize();
+		spec1.updateBins(binFactor);
 		plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
-	    //plotarea.data[2].x = spec1.x_mid;
-	    //plotarea.data[2].y = spec1.y;
+	    plotarea.data[2].x = spec1.x_mid;
+	    plotarea.data[2].y = spec1.y;
 	    plotarea.data[2].error_y.array = spec1.err;
 	    plotarea.layout.xaxis.title = spec1.xlabel();
 	    plotarea.layout.yaxis.title = spec1.ylabel();
