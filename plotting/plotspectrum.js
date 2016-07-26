@@ -1,7 +1,6 @@
-"use strict";
+//"use strict";
 const Ang2keV = 12.389419;
 const exposureTime = 1e4;
-
 
 
 function convertBinUnit(){
@@ -24,18 +23,6 @@ function convertBinUnit(){
 
 };
 
-
-function convertyunit(){
-    var area = 0.001;
-    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
-    var unit = $('#yunit').val();
-    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize/area), 'Fy/X' : 1/area};
-    var f = factor[unit];
-    return {
-    	y_unit: unit,
-	    yfunc: function(val){return val * f;}, //NEED TO FIGURE OUT WHAT THESE DO.
-	};
-};
 
 function updateBinSize(){
 	var binSize = $('#binFactor').val() * 0.05; //In Angstroms
@@ -98,7 +85,63 @@ function convertunit(){
 	alert('Unit: ' + unit + ' not supported.');
     }
 };
-  
+
+
+
+function convertyunit(area){
+    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
+    var unit = $('#yunit').val();
+
+    var h = 6.626e-34;
+	var c = 3.0e8;
+	var joules_to_KeV = 6.242e15;
+
+    var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize), 'Fy' : (binSize), 'Fy/X' : 1, 'FX': h*c*joules_to_KeV, 'XFX': h*c*joules_to_KeV*binSize};
+    var f = factor[unit];
+    //not all conversions are complete... some functionality is still in the other function convert_to_y_unit...
+    return{
+		y_unit: unit,
+		yfunc : function(val){return val * f;},
+	};
+
+/*
+    if (unit == 'counts/X/s' || unit == 'counts/bin'){
+    	var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize)};
+    	var f = factor[unit];
+    	return {
+    		y_unit: unit,
+	    	yfunc: function(val){return val * f;},
+	    };
+	};
+	if (unit == 'Fy' || unit == 'Fy/X'){
+		var factor = {'Fy' : (binSize), 'Fy/X' : 1};
+    	var f = factor[unit];
+    	//return {
+    	//	y_unit: unit,
+	    //	yfunc: function(val){return val * f;},
+	    //};
+	    return {
+    		y_unit: unit,
+	    	yfunc: function(val){return val * f;},
+	    };
+	};
+
+	if (unit == 'FX' || unit == 'XFX'){ //-********************************THIS IS IN PROGRESS**************
+		var h = 6.626e-34;
+		var c = 3.0e8;
+		var joules_to_KeV = 6.242e15;
+		var factor = {'FX': h*c*joules_to_KeV, 'XFX': h*c*joules_to_KeV*binSize};
+		var f = factor[unit];
+		return{
+			y_unit: unit,
+			yfunc : function(val){return val * f;},
+		};
+
+	};
+	*/
+
+};
+
 
 function Spectrum(rawdata){
     // TBD: add safty checks: right units in header, at least x data values etc.
@@ -107,9 +150,12 @@ function Spectrum(rawdata){
     this.x_mid_in = [];
     this.y_in = [];
     this.err_in = [];
+    this.effective_area_in=[];
     this.x_unit_in = 'Å';
     this.x_type_in = 'wavelength';
     this.y_type_in = 'counts / s / Å';
+
+
 
     var i, row;
     for (i = 0; i < rawdata.length; i++) {
@@ -123,6 +169,7 @@ function Spectrum(rawdata){
 	    this.x_mid_in.push( 0.5 * row[0] + 0.5 * row[1]);
 	    this.y_in.push( +row[2]);
 	    this.err_in.push( +row[3]);
+	    this.effective_area_in.push(+ Math.random()); //THIS WILL EVENTUALLY HAVE TO BE THE CORRECT DATA FROM ROW[4?].... right now the number is randomly generated just for skeleton purposes
 	}
     };
     this.x = this.x_lo_in;
@@ -174,13 +221,47 @@ function Spectrum(rawdata){
     	switch(yunit){
     		case 'counts/X/s':
     			this.y_type = 'counts / s / ' + xunit;
+    			break;
+    		case 'Fy/X':
+    			this.y_type = 'photons / area / second / '+ xunit;
+    			break;
+    		case 'FX':
+    			this.y_type = 'KeV / area / second / ' + this.x_unit;
+    			break;
     	};
     };
 
     this.convert_to_yunit = function(){
-    	var converter = convertyunit()
-    	this.y = this.y_in.map(converter.yfunc);
-    	this.y.push(0);
+    	var area = this.effective_area_in;
+    	var converter = convertyunit(area);
+    	switch(converter.y_unit){
+    		case 'counts/X/s':
+    		case 'counts/bin':
+    			this.y = this.y_in.map(converter.yfunc);
+    			break;
+    		case 'Fy':
+    		case 'Fy/X':
+    			this.y = this.y_in.map(converter.yfunc);
+    			for (i=0; i < this.y.length; i++){
+    				this.y[i] = this.y[i]/area[i];
+    			};
+    			break;
+    		case 'FX':
+    		case 'XFX':
+    			this.y = this.y_in.map(converter.yfunc);
+    			for (i=0; i < this.y.length; i++){
+    				this.y[i] = this.y[i] / (area[i]*this.x_mid_in[i]*1.0e-10);
+    			};
+    			break;
+    		default:
+    			this.y = this.y_in.map(converter.yfunc);
+    		break;
+    	};
+
+    	//this.y = this.y_in.map(converter.yfunc);
+    	//this.y.push(0);
+
+    	//This changes the label
     	switch(converter.y_unit){
     		case 'counts/X/s':
     			this.y_type = 'counts / s / ' + this.x_unit;
@@ -188,12 +269,48 @@ function Spectrum(rawdata){
     		case 'counts/bin':
     			this.y_type = 'counts / bin'
     			break;
+    		case 'Fy':
+    			this.y_type = 'photons / area / second'; //THIS SHOULD BE THE ACUAL NAME... Photons per area per second?
+    			break;
+    		case 'Fy/X':
+    			this.y_type = 'photons / area / second / ' + this.x_unit;
+    			break;
+    		case 'FX':
+    			this.y_type = 'KeV / area / second / ' + this.x_unit;
+    			break;
+    		case 'XFX':
+    			this.y_type = 'KeV / area / second';
+    			break;
     		default:
     			this.y_type = 'default';
     			break;
     	};
 
 
+    };
+
+    this.updateBins = function(binFactor){ //******************************************** THIS IS SUPER NOT DONE	
+    	//CODE
+    	numloops = 0;
+    	for (i=0; i < this.y.length/binFactor; i++){
+
+    		this.x[i] = this.x[i*binFactor];
+
+    		this.y[i] = 0;
+
+    		numloops++;
+
+    		this.y[i]= this.y.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0);
+
+    		/*
+    		for (j = 0; j < binFactor; j++ ){
+    			this.y[i] = this.y[i] + this.y[(i*binFactor)+j];
+    		};
+    		*/
+    	};
+    	var end = Math.floor(this.x.length / binFactor);
+    	this.x = this.x.slice(0, numloops);
+    	this.y = this.y.slice(0, numloops);
     };
 
 };
@@ -266,6 +383,7 @@ $(document).ready(function(){
     $('#xunit').val('Å');
     $('#redshift').val("0.0");
 
+
     
     var hlike = new LineList("H-like lines",
 			     ['O VII', 'O VII', 'Ne X', 'Ne X', 'Mg XII', 'Mg XII'],
@@ -283,7 +401,7 @@ $(document).ready(function(){
 	    return;
 	}
 	rawdata = Plotly.d3.tsv.parseRows(data);
-	var spec1 = new Spectrum(rawdata);
+	spec1 = new Spectrum(rawdata);
 	var spectrum1 = new LineSpec(spec1);
 	var err_spectrum1 = new ErrSpec(spec1, spectrum1);
 	var data = [hlike, spectrum1, err_spectrum1];
@@ -362,7 +480,28 @@ $(document).ready(function(){
 	});
 
 	document.getElementById("binFactor").onblur = function(){
+
+		if ((this.value == 0) || (isNaN(this.value))){
+			alert("Not a valid bin size");
+			this.value = 1;
+		};
+
+
+		var binFactor = $("#binFactor").val();
 		updateBinSize();
+		spec1.updateBins(binFactor);
+		plotarea.data[0].x = hlike.x;
+	    plotarea.data[1].x = spec1.x;
+	    plotarea.data[1].y = spec1.y;
+	    plotarea.data[2].x = spec1.x_mid;
+	    plotarea.data[2].y = spec1.y;
+	    plotarea.data[2].error_y.array = spec1.err;
+	    plotarea.layout.xaxis.title = spec1.xlabel();
+	    plotarea.layout.yaxis.title = spec1.ylabel();
+	    Plotly.redraw(plotarea);
 	};
+
+	$("#display").html(spec1.x_mid.length);
+
     });
 });
