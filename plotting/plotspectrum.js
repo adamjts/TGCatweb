@@ -293,19 +293,34 @@ function Spectrum(rawdata){
     	//CODE
     	numloops = 0;
 
+
+    	this.y = this.y_in;
+    	this.x = this.x_in;
+    	this.x_mid = this.x_mid_in;
+    	//now we convert the units... then rebin.
+
+    	this.convert_to_yunit();
+    	this.convert_to_xunit();
+
+
+
     	// have to convert the binsize to factor 1 again... make copies of all arrays, then construct the new this.x etc using this new arrays...
+
+    	var x_tmp = this.x;
+    	var y_tmp = this.y;
+    	var x_mid_tmp = this.x_mid;
 
     	this.x = [];
     	this.y = [];
     	this.x_mid = [];
 
     	for (i=0; i < this.y_in.length/binFactor; i++){
-    		numloops++;
+    		//numloops++;
 
-    		this.x.push(this.x_lo_in[i*binFactor]);
-    		this.x_mid.push(this.x_mid_in[i*binFactor])
+    		this.x.push(x_tmp[i*binFactor]);
+    		this.x_mid.push(x_mid_tmp[i*binFactor])
 
-    		this.y.push(this.y_in.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0));
+    		this.y.push(y_tmp.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0));
     	};
     };
 
