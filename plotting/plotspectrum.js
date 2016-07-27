@@ -491,21 +491,14 @@ $(document).ready(function(){
 
 	document.getElementById("binFactor").onblur = function(){
 
-		if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length)){
+		if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length) || (this.value%1 != 0)){
 			alert("Not a valid bin size");
 			this.value = "";
 		} else{
 			var binFactor = $("#binFactor").val();
 			updateBinSize();
-			spec1.updateBins(binFactor); // RIGHT NOW THIS ONLY WORKS FOR THE FIRST CONVERSION!!!!!.... need to make work for following conversions
+			spec1.updateBins(binFactor); 
 			
-			if ($("#xunit") != 'Å'){
-				//spec1.convert_to_xunit(); //----- problem here is that the conversions assume the same bin size... they use spec1.y_in....
-			};
-			if ($("#yunit") != 'counts/X/Second'){
-				//spec1.convert_to_yunit();
-			};
-
 			plotarea.data[0].x = hlike.x;
 	    	plotarea.data[1].x = spec1.x;
 	    	plotarea.data[1].y = spec1.y;
@@ -525,3 +518,9 @@ $(document).ready(function(){
 
     });
 });
+
+
+/*
+To Do:
+ - Make sure that when converting units and w/ binsize is already changed that the graph works out.
+*/
