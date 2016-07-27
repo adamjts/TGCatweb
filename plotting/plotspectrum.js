@@ -3,6 +3,9 @@ const Ang2keV = 12.389419;
 const exposureTime = 1e4;
 
 
+
+
+
 function convertBinUnit(){
 
 
@@ -382,7 +385,21 @@ function LineList(title, names, energies) {
 	}
     };
     this.yaxis = 'y2';
-}
+};
+
+
+
+function resetBins(){
+	document.getElementById("binFactor").value = 1;
+	updateBinSize();
+	spec1.updateBins(1); 
+
+};
+
+
+
+
+
 //var plotlyoptions = {displaylogo: false, scrollZoom: true, showLink: false, editable: true};
 var plotlyoptions = {displaylogo: false, showLink: true,
 		     linkText: 'Edit plot on external website'};
@@ -452,8 +469,19 @@ $(document).ready(function(){
 	    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
 	});
  	$('#xunit').change(function(){
+ 		//remember bin size and reset them so that we can do the unit conversions
+ 		var binSize = document.getElementById("binFactor").value; 
+ 		resetBins();
+
 	    hlike.update();
 	    spec1.convert_to_xunit();
+
+		//re-apply the rebinning
+	    document.getElementById("binFactor").value = binSize;
+	    updateBinSize();
+		spec1.updateBins(binSize);
+
+		//replot
 	    plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
@@ -465,10 +493,24 @@ $(document).ready(function(){
 	    Plotly.redraw(plotarea);
 
 	    convertBinUnit();
+
+
+
 	});
 	$('#yunit').change(function(){
+		//remember binsize and reset them so that we can do the unit conversions
+		var binSize = document.getElementById("binFactor").value;
+		resetBins();
+
 		hlike.update();
 		spec1.convert_to_yunit();
+
+		//re-apply the binning
+		document.getElementById("binFactor").value = binSize;
+		updateBinSize();
+		spec1.updateBins(binSize);
+
+
 		plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
@@ -491,21 +533,14 @@ $(document).ready(function(){
 
 	document.getElementById("binFactor").onblur = function(){
 
-		if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length)){
+		if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length) || (this.value%1 != 0)){
 			alert("Not a valid bin size");
 			this.value = "";
 		} else{
 			var binFactor = $("#binFactor").val();
 			updateBinSize();
-			spec1.updateBins(binFactor); // RIGHT NOW THIS ONLY WORKS FOR THE FIRST CONVERSION!!!!!.... need to make work for following conversions
+			spec1.updateBins(binFactor); 
 			
-			if ($("#xunit") != 'Å'){
-				//spec1.convert_to_xunit(); //----- problem here is that the conversions assume the same bin size... they use spec1.y_in....
-			};
-			if ($("#yunit") != 'counts/X/Second'){
-				//spec1.convert_to_yunit();
-			};
-
 			plotarea.data[0].x = hlike.x;
 	    	plotarea.data[1].x = spec1.x;
 	    	plotarea.data[1].y = spec1.y;
@@ -515,13 +550,16 @@ $(document).ready(function(){
 	    	plotarea.layout.xaxis.title = spec1.xlabel();
 	    	plotarea.layout.yaxis.title = spec1.ylabel();
 	    	Plotly.redraw(plotarea);
-		};
-
-
-		
+		};	
 	};
 
 	$("#display").html(spec1.x_mid.length);
 
     });
 });
+
+
+/*
+To Do:
+ - Make sure that when converting units and w/ binsize is already changed that the graph works out. Right now bin conversions work for all units only if the rebinning is done last
+*/
