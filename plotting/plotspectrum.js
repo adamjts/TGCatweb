@@ -561,5 +561,5 @@ $(document).ready(function(){
 
 /*
 To Do:
- - Make sure that when converting units and w/ binsize is already changed that the graph works out. Right now bin conversions work for all units only if the rebinning is done last
+- multiple spectra
 */
