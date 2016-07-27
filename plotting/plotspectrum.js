@@ -469,11 +469,19 @@ $(document).ready(function(){
 	    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
 	});
  	$('#xunit').change(function(){
-
+ 		//remember bin size and reset them so that we can do the unit conversions
+ 		var binSize = document.getElementById("binFactor").value; 
  		resetBins();
 
 	    hlike.update();
 	    spec1.convert_to_xunit();
+
+		//re-apply the rebinning
+	    document.getElementById("binFactor").value = binSize;
+	    updateBinSize();
+		spec1.updateBins(binSize);
+
+		//replot
 	    plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
@@ -485,13 +493,24 @@ $(document).ready(function(){
 	    Plotly.redraw(plotarea);
 
 	    convertBinUnit();
+
+
+
 	});
 	$('#yunit').change(function(){
-
+		//remember binsize and reset them so that we can do the unit conversions
+		var binSize = document.getElementById("binFactor").value;
 		resetBins();
 
 		hlike.update();
 		spec1.convert_to_yunit();
+
+		//re-apply the binning
+		document.getElementById("binFactor").value = binSize;
+		updateBinSize();
+		spec1.updateBins(binSize);
+
+
 		plotarea.data[0].x = hlike.x;
 	    plotarea.data[1].x = spec1.x;
 	    plotarea.data[1].y = spec1.y;
