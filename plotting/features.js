@@ -1,6 +1,6 @@
 //features.js
 
-
+/*
 var redshiftField = document.getElementById("redshift");
 var binSizeField = document.getElementById("binSize");
 var binFactor = document.getElementById("binFactor");
