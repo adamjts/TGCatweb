@@ -3,6 +3,9 @@ const Ang2keV = 12.389419;
 const exposureTime = 1e4;
 
 
+
+
+
 function convertBinUnit(){
 
 
@@ -382,7 +385,21 @@ function LineList(title, names, energies) {
 	}
     };
     this.yaxis = 'y2';
-}
+};
+
+
+
+function resetBins(){
+	document.getElementById("binFactor").value = 1;
+	updateBinSize();
+	spec1.updateBins(1); 
+
+};
+
+
+
+
+
 //var plotlyoptions = {displaylogo: false, scrollZoom: true, showLink: false, editable: true};
 var plotlyoptions = {displaylogo: false, showLink: true,
 		     linkText: 'Edit plot on external website'};
@@ -452,6 +469,9 @@ $(document).ready(function(){
 	    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
 	});
  	$('#xunit').change(function(){
+
+ 		resetBins();
+
 	    hlike.update();
 	    spec1.convert_to_xunit();
 	    plotarea.data[0].x = hlike.x;
@@ -467,6 +487,9 @@ $(document).ready(function(){
 	    convertBinUnit();
 	});
 	$('#yunit').change(function(){
+
+		resetBins();
+
 		hlike.update();
 		spec1.convert_to_yunit();
 		plotarea.data[0].x = hlike.x;
@@ -508,10 +531,7 @@ $(document).ready(function(){
 	    	plotarea.layout.xaxis.title = spec1.xlabel();
 	    	plotarea.layout.yaxis.title = spec1.ylabel();
 	    	Plotly.redraw(plotarea);
-		};
-
-
-		
+		};	
 	};
 
 	$("#display").html(spec1.x_mid.length);
@@ -522,5 +542,5 @@ $(document).ready(function(){
 
 /*
 To Do:
- - Make sure that when converting units and w/ binsize is already changed that the graph works out.
+ - Make sure that when converting units and w/ binsize is already changed that the graph works out. Right now bin conversions work for all units only if the rebinning is done last
 */
