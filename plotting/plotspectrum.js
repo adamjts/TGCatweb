@@ -2,7 +2,10 @@
 const Ang2keV = 12.389419;
 const exposureTime = 1e4;
 const numGraphs = 2;
-
+spectra = [];
+linespectra = [];
+err_spectra = [];
+data = [];
 
 
 
@@ -292,7 +295,7 @@ function Spectrum(rawdata){
 
     };
 
-    this.updateBins = function(binFactor){ //******************************************** THIS IS SUPER NOT DONE	
+    this.updateBins = function(binFactor){ 
     	//CODE
     	numloops = 0;
 
@@ -393,11 +396,38 @@ function LineList(title, names, energies) {
 function resetBins(){
 	document.getElementById("binFactor").value = 1;
 	updateBinSize();
-	spec1.updateBins(1); 
+	for (i=0 ; i < numGraphs; i++){
+		spectra[i].updateBins(1);
+	};
+	//spec1.updateBins(1); 
 
 };
 
 
+
+function retreiveData(rawDataURL, specNumber){
+
+	var toReturn = []
+
+	$.get(rawDataURL, function(spec_data, status){
+		if (status != 'success'){
+	    		alert("Data download failed.\nStatus: " + status);
+	    		return;
+		};
+		var rawdata = Plotly.d3.tsv.parseRows(spec_data);
+		var spec1 = new Spectrum(rawdata);
+		var spectrum1 = new LineSpec(spec1, specNumber);
+		var err_spectrum1 = new ErrSpec(spec1, spectrum1);
+
+		toReturn.push(spec1, spectrum1, err_spectrum1);
+		//alert("pushed");
+
+		spectra.push(spec1);
+		linespectra.push(spectrum1);
+		err_spectra.push(err_spectrum1);
+
+	});
+};
 
 
 
@@ -413,7 +443,6 @@ $(document).ready(function(){
     $('#redshift').val("0.0");
 
 
-    
     var hlike = new LineList("H-like lines",
 			     ['O VII', 'O VII', 'Ne X', 'Ne X', 'Mg XII', 'Mg XII'],
 			     [0.653589, 0.774679, 1.02168, 1.21102, 1.47201, 1.74489]);
@@ -425,62 +454,118 @@ $(document).ready(function(){
 
     for (i = 0; i < numGraphs; i++){
     	rawDataURLs.push("https://raw.githubusercontent.com/hamogu/TGCatweb/master/testdata/1460764540T1835972358ascii.dat");
-    }
+    };
+
+    var layout;
+    data.push(hlike);
 
 
-
-    var rawdata;
-
-
-    for (g = 0; g < numGraphs; g++){
-
-
-    
-    $.get(rawDataURLs[g], function(data, status){
-        if (status != 'success'){
-	    	alert("Data download failed.\nStatus: " + status);
-	    	return;
+    $.get(rawDataURLs[0], function(spec_data, status){
+		if (status != 'success'){
+	   			alert("Data download failed.\nStatus: " + status);
+	   			return;
 		};
-		rawdata = Plotly.d3.tsv.parseRows(data);
-		spec1 = new Spectrum(rawdata);
-		var spectrum1 = new LineSpec(spec1, g);
-		var err_spectrum1 = new ErrSpec(spec1, spectrum1);
-		var data = [hlike, spectrum1, err_spectrum1];
-    
-		var layout = {
-		    title: 'TW Hydra - ObsID 6443',
-		    showlegend: true,
-		    xaxis: {title: spec1.xlabel()},
-		    yaxis: {title: spec1.ylabel()},
-		    yaxis2: {
-			anchor: 'free',
-			overlaying: 'y',
-			side: 'right',
-			showticklabels: false,
-			showgrid: false,
-			zeroline: false,
-			showline: false,
-			range: [0, 1],
-			fixedrange: true,
-		     },
-		};		
 
+
+		for (g = 0; g < numGraphs; g++){
+			var rawdata = Plotly.d3.tsv.parseRows(spec_data);
+			var spec1 = new Spectrum(rawdata);
+			var spectrum1 = new LineSpec(spec1, g);
+			var err_spectrum1 = new ErrSpec(spec1, spectrum1);
+			spectra.push(spec1);
+			linespectra.push(spectrum1);
+			err_spectra.push(err_spectrum1);
+
+			data.push(spectrum1, err_spectrum1);
+		};
+
+
+
+
+		layout = {
+			title: 'TW Hydra - ObsID 6443',
+			showlegend: true,
+	    	//xaxis: {title: spectra[0].xlabel()},
+	    	//yaxis: {title: spectra[0].ylabel()},
+	    	yaxis2: {
+				anchor: 'free',
+				overlaying: 'y',
+				side: 'right',
+				showticklabels: false,
+				showgrid: false,
+				zeroline: false,
+				showline: false,
+				range: [0, 1],
+				fixedrange: true,
+			},
+		};
+
+	
 		var plotarea = document.getElementById("plotarea");
+		Plotly.plot( plotarea, data, layout, plotlyoptions); 
 
-		Plotly.plot( plotarea, data, layout, plotlyoptions);
+   	});
 
-		$('#xaxislog').click(function(){
-	    	if ( plotarea.layout.xaxis.type == 'log' )
-	    		Plotly.relayout(plotarea, {'xaxis.type': 'linear'})
-	    	else
-	    	Plotly.relayout(plotarea, {'xaxis.type': 'log'})
-		});
-		$('#yaxislog').click(function(){
-		    if ( plotarea.layout.yaxis.type == 'log' )
+	$('#xaxislog').click(function(){
+	    if ( plotarea.layout.xaxis.type == 'log' )
+	   		Plotly.relayout(plotarea, {'xaxis.type': 'linear'})
+	   	else
+	   		Plotly.relayout(plotarea, {'xaxis.type': 'log'})
+	});
+
+	$('#yaxislog').click(function(){
+		if ( plotarea.layout.yaxis.type == 'log' )
 		    Plotly.relayout(plotarea, {'yaxis.type': 'linear'})
-		    else
+		else
 		    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
-		});
+	});
+
+
+	$('#xunit').change(function(){
+ 		//remember bin size and reset them so that we can do the unit conversions
+ 		var binFactor = document.getElementById("binFactor").value; 
+ 		resetBins();		
+
+	    hlike.update();
+
+	    for (g=0; g < numGraphs; g++){
+	    	spectra[g].convert_to_xunit();
+	    };	
+
+		//re-apply the rebinning
+	    document.getElementById("binFactor").value = binFactor;
+	    updateBinSize();
+	    for (g = 0; g< numGraphs; g++){
+	    	spectra[g].updateBins(binFactor);
+	    };
+
+		//replot
+		plotarea.data[0].x = hlike.x;
+		for(g=0; g < numGraphs; g++){
+	    	plotarea.data[(2*g)+1].x = spectra[g].x;
+	    	plotarea.data[(2*g)+1].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].x = spectra[g].x_mid;
+	    	plotarea.data[(2*g)+2].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
+	    	plotarea.layout.xaxis.title = spectra[g].xlabel();
+	    	plotarea.layout.yaxis.title = spectra[g].ylabel();
+
+	    };	
+	    Plotly.redraw(plotarea);
+
+	    convertBinUnit();
+
+	});
+
+
+
+
+});
+
+	
+
+		/*
+		
  		$('#xunit').change(function(){
  			//remember bin size and reset them so that we can do the unit conversions
  			var binSize = document.getElementById("binFactor").value; 
@@ -568,11 +653,9 @@ $(document).ready(function(){
 		};
 
 		$("#display").html(spec1.x_mid.length);
+		*/
 
-    });
-
-	}; //END OF GIANT FOR LOOP
-});
+    
 
 
 /*
