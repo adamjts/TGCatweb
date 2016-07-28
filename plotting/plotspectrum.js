@@ -557,108 +557,76 @@ $(document).ready(function(){
 
 	});
 
+	$('#yunit').change(function(){
+		//remember binsize and reset them so that we can do the unit conversions
+		var binSize = document.getElementById("binFactor").value;
+		resetBins();
+		hlike.update();
+		for (g = 0; g < numGraphs; g++){
+			spectra[g].convert_to_yunit;
+		};
+
+		//re-apply the binning
+		document.getElementById("binFactor").value = binSize;
+		updateBinSize();
+		for (g = 0 ; g< numGraphs ; g++){
+			spectra[g].updateBins(binSize);
+		};
+
+		plotarea.data[0].x = hlike.x;
+		for(g=0; g < numGraphs; g++){
+	    	plotarea.data[(2*g)+1].x = spectra[g].x;
+	    	plotarea.data[(2*g)+1].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].x = spectra[g].x_mid;
+	    	plotarea.data[(2*g)+2].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
+	    	plotarea.layout.xaxis.title = spectra[g].xlabel();
+	    	plotarea.layout.yaxis.title = spectra[g].ylabel();
+
+	    };	
+	    Plotly.redraw(plotarea);
+	});
+
+	$('#redshift').change(function(){
+	    hlike.update();
+	    plotarea.data[0].x = hlike.x;
+	    Plotly.redraw(plotarea);
+	});
+
+	$('#binSize').change(function(){
+		binSize = this.val();
+	});
+
+	document.getElementById("binFactor").onblur = function(){
+
+			if ((this.value == 0) || (isNaN(this.value)) || (this.value > spectra[0].x.length) || (this.value%1 != 0)){
+			alert("Not a valid bin size");
+			this.value = "";
+		} else{
+			var binFactor = $("#binFactor").val();
+			updateBinSize();
+
+			for (g = 0; g < numGraphs; g++){
+				spectra[g].updateBins(binFactor);
+			};
+			
+		plotarea.data[0].x = hlike.x;
+		for(g=0; g < numGraphs; g++){
+	    	plotarea.data[(2*g)+1].x = spectra[g].x;
+	    	plotarea.data[(2*g)+1].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].x = spectra[g].x_mid;
+	    	plotarea.data[(2*g)+2].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
+	    	plotarea.layout.xaxis.title = spectra[g].xlabel();
+	    	plotarea.layout.yaxis.title = spectra[g].ylabel();
+
+	    };	
+	    Plotly.redraw(plotarea);
+		};	
+	};
 
 
 
 });
 
 	
-
-		/*
-		
- 		$('#xunit').change(function(){
- 			//remember bin size and reset them so that we can do the unit conversions
- 			var binSize = document.getElementById("binFactor").value; 
- 			resetBins();		
-
-		    hlike.update();
-		    spec1.convert_to_xunit();	
-
-			//re-apply the rebinning
-		    document.getElementById("binFactor").value = binSize;
-		    updateBinSize();
-			spec1.updateBins(binSize);
-
-			//replot
-		    plotarea.data[0].x = hlike.x;
-		    plotarea.data[1].x = spec1.x;
-		    plotarea.data[1].y = spec1.y;
-		    plotarea.data[2].x = spec1.x_mid;
-		    plotarea.data[2].y = spec1.y;
-		    plotarea.data[2].error_y.array = spec1.err;
-		    plotarea.layout.xaxis.title = spec1.xlabel();
-		    plotarea.layout.yaxis.title = spec1.ylabel();
-		    Plotly.redraw(plotarea);
-
-		    convertBinUnit();
-
-		});
-
-
-		$('#yunit').change(function(){
-			//remember binsize and reset them so that we can do the unit conversions
-			var binSize = document.getElementById("binFactor").value;
-			resetBins();
-
-			hlike.update();
-			spec1.convert_to_yunit();
-
-			//re-apply the binning
-			document.getElementById("binFactor").value = binSize;
-			updateBinSize();
-			spec1.updateBins(binSize);
-
-
-			plotarea.data[0].x = hlike.x;
-		    plotarea.data[1].x = spec1.x;
-		    plotarea.data[1].y = spec1.y;
-		    plotarea.data[2].x = spec1.x_mid;
-		    plotarea.data[2].y = spec1.y;
-		    plotarea.data[2].error_y.array = spec1.err;
-		    plotarea.layout.xaxis.title = spec1.xlabel();
-		    plotarea.layout.yaxis.title = spec1.ylabel();
-		    Plotly.redraw(plotarea);
-		});
-
-		$('#redshift').change(function(){
-		    hlike.update();
-		    plotarea.data[0].x = hlike.x;
-		    Plotly.redraw(plotarea);
-		});
-	
-		$('#binSize').change(function(){
-			binSize = this.val();
-		});
-
-		document.getElementById("binFactor").onblur = function(){
-
-			if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length) || (this.value%1 != 0)){
-				alert("Not a valid bin size");
-				this.value = "";
-			} else{
-				var binFactor = $("#binFactor").val();
-				updateBinSize();
-				spec1.updateBins(binFactor); 
-			
-				plotarea.data[0].x = hlike.x;
-		    	plotarea.data[1].x = spec1.x;
-		    	plotarea.data[1].y = spec1.y;
-		    	plotarea.data[2].x = spec1.x_mid;
-		    	plotarea.data[2].y = spec1.y;
-		    	plotarea.data[2].error_y.array = spec1.err;
-		    	plotarea.layout.xaxis.title = spec1.xlabel();
-		    	plotarea.layout.yaxis.title = spec1.ylabel();
-		    	Plotly.redraw(plotarea);
-			};	
-		};
-
-		$("#display").html(spec1.x_mid.length);
-		*/
-
-    
-
-
-/*
-To Do:
-- multiple spectra
-*/
