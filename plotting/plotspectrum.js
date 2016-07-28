@@ -1,7 +1,7 @@
 //"use strict";
 const Ang2keV = 12.389419;
 const exposureTime = 1e4;
-const numGraphs = 2;
+const numGraphs = 4;
 spectra = [];
 linespectra = [];
 err_spectra = [];
@@ -334,7 +334,7 @@ function Spectrum(rawdata){
 
 function LineSpec(spec, g) {
     this.type = 'scatter';
-    colors = ['blue', 'red'];
+    colors = ['blue', 'red', 'green', 'orange'];
     this.line = {shape: 'hv', color: colors[g]};
     this.x = spec.x;
     this.y = spec.y;
@@ -404,30 +404,6 @@ function resetBins(){
 };
 
 
-
-function retreiveData(rawDataURL, specNumber){
-
-	var toReturn = []
-
-	$.get(rawDataURL, function(spec_data, status){
-		if (status != 'success'){
-	    		alert("Data download failed.\nStatus: " + status);
-	    		return;
-		};
-		var rawdata = Plotly.d3.tsv.parseRows(spec_data);
-		var spec1 = new Spectrum(rawdata);
-		var spectrum1 = new LineSpec(spec1, specNumber);
-		var err_spectrum1 = new ErrSpec(spec1, spectrum1);
-
-		toReturn.push(spec1, spectrum1, err_spectrum1);
-		//alert("pushed");
-
-		spectra.push(spec1);
-		linespectra.push(spectrum1);
-		err_spectra.push(err_spectrum1);
-
-	});
-};
 
 
 
