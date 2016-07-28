@@ -1,7 +1,7 @@
 //"use strict";
 const Ang2keV = 12.389419;
 const exposureTime = 1e4;
-
+const numGraphs = 2;
 
 
 
@@ -329,9 +329,10 @@ function Spectrum(rawdata){
 
 };
 
-function LineSpec(spec) {
+function LineSpec(spec, g) {
     this.type = 'scatter';
-    this.line = {shape: 'hv', color: 'blue'};
+    colors = ['blue', 'red'];
+    this.line = {shape: 'hv', color: colors[g]};
     this.x = spec.x;
     this.y = spec.y;
     this.mode = 'lines';
@@ -419,18 +420,30 @@ $(document).ready(function(){
     
 			     
     // This will later be replaced with php I guess
-    var rawDataURL = 'https://raw.githubusercontent.com/hamogu/TGCatweb/master/testdata/1460764540T1835972358ascii.dat'
+    //var rawDataURL = 'https://raw.githubusercontent.com/hamogu/TGCatweb/master/testdata/1460764540T1835972358ascii.dat'
+    var rawDataURLs = [];
+
+    for (i = 0; i < numGraphs; i++){
+    	rawDataURLs.push("https://raw.githubusercontent.com/hamogu/TGCatweb/master/testdata/1460764540T1835972358ascii.dat");
+    }
+
+
 
     var rawdata;
+
+
+    for (g = 0; g < numGraphs; g++){
+
+
     
-    $.get(rawDataURL, function(data, status){
+    $.get(rawDataURLs[g], function(data, status){
         if (status != 'success'){
 	    	alert("Data download failed.\nStatus: " + status);
 	    	return;
 		};
 		rawdata = Plotly.d3.tsv.parseRows(data);
 		spec1 = new Spectrum(rawdata);
-		var spectrum1 = new LineSpec(spec1);
+		var spectrum1 = new LineSpec(spec1, g);
 		var err_spectrum1 = new ErrSpec(spec1, spectrum1);
 		var data = [hlike, spectrum1, err_spectrum1];
     
@@ -557,6 +570,8 @@ $(document).ready(function(){
 		$("#display").html(spec1.x_mid.length);
 
     });
+
+	}; //END OF GIANT FOR LOOP
 });
 
 
