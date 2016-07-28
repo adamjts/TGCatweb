@@ -442,7 +442,7 @@ $(document).ready(function(){
 	   			return;
 		};
 
-
+		//************************************ THE WAY RAW DATA IS RETREIVED WILL BE DIFFERENT WHEN HOOKED INTO PHP
 		for (g = 0; g < numGraphs; g++){
 			var rawdata = Plotly.d3.tsv.parseRows(spec_data);
 			var spec1 = new Spectrum(rawdata);
@@ -573,7 +573,7 @@ $(document).ready(function(){
 		binSize = this.val();
 	});
 
-	document.getElementById("binFactor").onblur = function(){
+	$("#binFactor").change(function(){
 
 			if ((this.value == 0) || (isNaN(this.value)) || (this.value > spectra[0].x.length) || (this.value%1 != 0)){
 			alert("Not a valid bin size");
@@ -599,7 +599,7 @@ $(document).ready(function(){
 	    };	
 	    Plotly.redraw(plotarea);
 		};	
-	};
+	});
 
 
 
