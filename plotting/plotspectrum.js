@@ -425,135 +425,136 @@ $(document).ready(function(){
     
     $.get(rawDataURL, function(data, status){
         if (status != 'success'){
-	    alert("Data download failed.\nStatus: " + status);
-	    return;
-	}
-	rawdata = Plotly.d3.tsv.parseRows(data);
-	spec1 = new Spectrum(rawdata);
-	var spectrum1 = new LineSpec(spec1);
-	var err_spectrum1 = new ErrSpec(spec1, spectrum1);
-	var data = [hlike, spectrum1, err_spectrum1];
+	    	alert("Data download failed.\nStatus: " + status);
+	    	return;
+		};
+		rawdata = Plotly.d3.tsv.parseRows(data);
+		spec1 = new Spectrum(rawdata);
+		var spectrum1 = new LineSpec(spec1);
+		var err_spectrum1 = new ErrSpec(spec1, spectrum1);
+		var data = [hlike, spectrum1, err_spectrum1];
     
-	var layout = {
-	    title: 'TW Hydra - ObsID 6443',
-	    showlegend: true,
-	    xaxis: {title: spec1.xlabel()},
-	    yaxis: {title: spec1.ylabel()},
-	    yaxis2: {
-		anchor: 'free',
-		overlaying: 'y',
-		side: 'right',
-		showticklabels: false,
-		showgrid: false,
-		zeroline: false,
-		showline: false,
-		range: [0, 1],
-		fixedrange: true,
-	     },
-	};
+		var layout = {
+		    title: 'TW Hydra - ObsID 6443',
+		    showlegend: true,
+		    xaxis: {title: spec1.xlabel()},
+		    yaxis: {title: spec1.ylabel()},
+		    yaxis2: {
+			anchor: 'free',
+			overlaying: 'y',
+			side: 'right',
+			showticklabels: false,
+			showgrid: false,
+			zeroline: false,
+			showline: false,
+			range: [0, 1],
+			fixedrange: true,
+		     },
+		};		
 
-	var plotarea = document.getElementById("plotarea");
+		var plotarea = document.getElementById("plotarea");
 
-	Plotly.plot( plotarea, data, layout, plotlyoptions);
+		Plotly.plot( plotarea, data, layout, plotlyoptions);
 
-	$('#xaxislog').click(function(){
-	    if ( plotarea.layout.xaxis.type == 'log' )
-	    Plotly.relayout(plotarea, {'xaxis.type': 'linear'})
-	    else
-	    Plotly.relayout(plotarea, {'xaxis.type': 'log'})
-	});
-	$('#yaxislog').click(function(){
-	    if ( plotarea.layout.yaxis.type == 'log' )
-	    Plotly.relayout(plotarea, {'yaxis.type': 'linear'})
-	    else
-	    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
-	});
- 	$('#xunit').change(function(){
- 		//remember bin size and reset them so that we can do the unit conversions
- 		var binSize = document.getElementById("binFactor").value; 
- 		resetBins();
+		$('#xaxislog').click(function(){
+	    	if ( plotarea.layout.xaxis.type == 'log' )
+	    		Plotly.relayout(plotarea, {'xaxis.type': 'linear'})
+	    	else
+	    	Plotly.relayout(plotarea, {'xaxis.type': 'log'})
+		});
+		$('#yaxislog').click(function(){
+		    if ( plotarea.layout.yaxis.type == 'log' )
+		    Plotly.relayout(plotarea, {'yaxis.type': 'linear'})
+		    else
+		    Plotly.relayout(plotarea, {'yaxis.type': 'log'})
+		});
+ 		$('#xunit').change(function(){
+ 			//remember bin size and reset them so that we can do the unit conversions
+ 			var binSize = document.getElementById("binFactor").value; 
+ 			resetBins();		
 
-	    hlike.update();
-	    spec1.convert_to_xunit();
+		    hlike.update();
+		    spec1.convert_to_xunit();	
 
-		//re-apply the rebinning
-	    document.getElementById("binFactor").value = binSize;
-	    updateBinSize();
-		spec1.updateBins(binSize);
+			//re-apply the rebinning
+		    document.getElementById("binFactor").value = binSize;
+		    updateBinSize();
+			spec1.updateBins(binSize);
 
-		//replot
-	    plotarea.data[0].x = hlike.x;
-	    plotarea.data[1].x = spec1.x;
-	    plotarea.data[1].y = spec1.y;
-	    plotarea.data[2].x = spec1.x_mid;
-	    plotarea.data[2].y = spec1.y;
-	    plotarea.data[2].error_y.array = spec1.err;
-	    plotarea.layout.xaxis.title = spec1.xlabel();
-	    plotarea.layout.yaxis.title = spec1.ylabel();
-	    Plotly.redraw(plotarea);
+			//replot
+		    plotarea.data[0].x = hlike.x;
+		    plotarea.data[1].x = spec1.x;
+		    plotarea.data[1].y = spec1.y;
+		    plotarea.data[2].x = spec1.x_mid;
+		    plotarea.data[2].y = spec1.y;
+		    plotarea.data[2].error_y.array = spec1.err;
+		    plotarea.layout.xaxis.title = spec1.xlabel();
+		    plotarea.layout.yaxis.title = spec1.ylabel();
+		    Plotly.redraw(plotarea);
 
-	    convertBinUnit();
+		    convertBinUnit();
 
-
-
-	});
-	$('#yunit').change(function(){
-		//remember binsize and reset them so that we can do the unit conversions
-		var binSize = document.getElementById("binFactor").value;
-		resetBins();
-
-		hlike.update();
-		spec1.convert_to_yunit();
-
-		//re-apply the binning
-		document.getElementById("binFactor").value = binSize;
-		updateBinSize();
-		spec1.updateBins(binSize);
+		});
 
 
-		plotarea.data[0].x = hlike.x;
-	    plotarea.data[1].x = spec1.x;
-	    plotarea.data[1].y = spec1.y;
-	    plotarea.data[2].x = spec1.x_mid;
-	    plotarea.data[2].y = spec1.y;
-	    plotarea.data[2].error_y.array = spec1.err;
-	    plotarea.layout.xaxis.title = spec1.xlabel();
-	    plotarea.layout.yaxis.title = spec1.ylabel();
-	    Plotly.redraw(plotarea);
+		$('#yunit').change(function(){
+			//remember binsize and reset them so that we can do the unit conversions
+			var binSize = document.getElementById("binFactor").value;
+			resetBins();
 
-	});
-	$('#redshift').change(function(){
-	    hlike.update();
-	    plotarea.data[0].x = hlike.x;
-	    Plotly.redraw(plotarea);
-	});
-	$('#binSize').change(function(){
-		binSize = this.val();
-	});
+			hlike.update();
+			spec1.convert_to_yunit();
 
-	document.getElementById("binFactor").onblur = function(){
-
-		if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length) || (this.value%1 != 0)){
-			alert("Not a valid bin size");
-			this.value = "";
-		} else{
-			var binFactor = $("#binFactor").val();
+			//re-apply the binning
+			document.getElementById("binFactor").value = binSize;
 			updateBinSize();
-			spec1.updateBins(binFactor); 
-			
-			plotarea.data[0].x = hlike.x;
-	    	plotarea.data[1].x = spec1.x;
-	    	plotarea.data[1].y = spec1.y;
-	    	plotarea.data[2].x = spec1.x_mid;
-	    	plotarea.data[2].y = spec1.y;
-	    	plotarea.data[2].error_y.array = spec1.err;
-	    	plotarea.layout.xaxis.title = spec1.xlabel();
-	    	plotarea.layout.yaxis.title = spec1.ylabel();
-	    	Plotly.redraw(plotarea);
-		};	
-	};
+			spec1.updateBins(binSize);
 
-	$("#display").html(spec1.x_mid.length);
+
+			plotarea.data[0].x = hlike.x;
+		    plotarea.data[1].x = spec1.x;
+		    plotarea.data[1].y = spec1.y;
+		    plotarea.data[2].x = spec1.x_mid;
+		    plotarea.data[2].y = spec1.y;
+		    plotarea.data[2].error_y.array = spec1.err;
+		    plotarea.layout.xaxis.title = spec1.xlabel();
+		    plotarea.layout.yaxis.title = spec1.ylabel();
+		    Plotly.redraw(plotarea);
+		});
+
+		$('#redshift').change(function(){
+		    hlike.update();
+		    plotarea.data[0].x = hlike.x;
+		    Plotly.redraw(plotarea);
+		});
+	
+		$('#binSize').change(function(){
+			binSize = this.val();
+		});
+
+		document.getElementById("binFactor").onblur = function(){
+
+			if ((this.value == 0) || (isNaN(this.value)) || (this.value > spec1.x.length) || (this.value%1 != 0)){
+				alert("Not a valid bin size");
+				this.value = "";
+			} else{
+				var binFactor = $("#binFactor").val();
+				updateBinSize();
+				spec1.updateBins(binFactor); 
+			
+				plotarea.data[0].x = hlike.x;
+		    	plotarea.data[1].x = spec1.x;
+		    	plotarea.data[1].y = spec1.y;
+		    	plotarea.data[2].x = spec1.x_mid;
+		    	plotarea.data[2].y = spec1.y;
+		    	plotarea.data[2].error_y.array = spec1.err;
+		    	plotarea.layout.xaxis.title = spec1.xlabel();
+		    	plotarea.layout.yaxis.title = spec1.ylabel();
+		    	Plotly.redraw(plotarea);
+			};	
+		};
+
+		$("#display").html(spec1.x_mid.length);
 
     });
 });
