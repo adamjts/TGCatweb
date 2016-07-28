@@ -485,8 +485,8 @@ $(document).ready(function(){
 		layout = {
 			title: 'TW Hydra - ObsID 6443',
 			showlegend: true,
-	    	//xaxis: {title: spectra[0].xlabel()},
-	    	//yaxis: {title: spectra[0].ylabel()},
+	    	xaxis: {title: spectra[0].xlabel()},
+	    	yaxis: {title: spectra[0].ylabel()},
 	    	yaxis2: {
 				anchor: 'free',
 				overlaying: 'y',
