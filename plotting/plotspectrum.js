@@ -95,7 +95,7 @@ function convertunit(){
 
 
 function convertyunit(area){
-    var binSize = $("#binSize").html(); // THIS WILL BE IN SOME UNIT NOT NECESSARILY ANGSTROMS
+    var binSize = $("#binSize").html(); 
     var unit = $('#yunit').val();
 
     var h = 6.626e-34;
