@@ -324,10 +324,78 @@ function Spectrum(rawdata){
     		//numloops++;
 
     		this.x.push(x_tmp[i*binFactor]);
-    		this.x_mid.push(x_mid_tmp[i*binFactor])
+    		this.x_mid.push(x_mid_tmp[i*binFactor]);
 
     		this.y.push(y_tmp.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0));
     	};
+    };
+
+    this.updateBins_StN = function(StN){
+    	var photon_min = StN * StN;
+
+    	this.y = this.y_in;
+    	this.x = this.x_in;
+    	this.x_mid = this.x_mid_in;
+
+    	this.convert_to_yunit();
+    	this.convert_to_xunit();
+
+
+    	var x_tmp = this.x;
+    	var y_tmp = this.y;
+    	var x_mid_tmp = this.x_mid;
+
+    	this.x = [];
+    	this.y = [];
+    	this.x_mid = [];
+
+    	var dataRemains = true;
+
+    	var rowCounter = 0;
+    	var lastRow = 0;
+    	var photon_count = 0;
+
+    	while(dataRemains){
+    		//do the binning
+
+    		//alert(photon_count + ' = ' + photon_count +  ' + ' + y_tmp[rowCounter]);
+
+    		if (isNaN(y_tmp[rowCounter])){
+    			alert('problem... rowCounter=' + rowCounter + '\nPhotonCount: ' + photon_count + 'photon_min: ' + photon_min);
+    			break;
+    		};
+
+    		photon_count = photon_count + y_tmp[rowCounter];
+
+
+    		//alert(photon_count + ' = ' + photon_count +  ' + ' + y_tmp[rowCounter]);
+
+    		if (rowCounter%1000 == 0){
+    			alert('row count: ' + rowCounter + '\nPhoton Count: ' + photon_count);
+    		};
+
+    		if(photon_count > photon_min){
+    			this.x.push(x_tmp[lastRow]);
+    			this.x_mid.push(x_mid_tmp[lastRow]);
+    			this.y.push(y_tmp.slice(lastRow, rowCounter).reduce(function(a,b){return a+b}, 0));
+
+    			lastRow = rowCounter;
+    			photon_count = 0;
+
+    			if(y_tmp.slice(rowCounter, y_tmp.length).reduce(function(a,b){return a+b}, 0) < photon_min){
+    				dataRemains = false;
+    				break;
+    			};
+    		};
+
+
+    		rowCounter++
+
+
+
+    	};
+
+
     };
 
 };
@@ -599,6 +667,31 @@ $(document).ready(function(){
 	    };	
 	    Plotly.redraw(plotarea);
 		};	
+	});
+
+
+	$("#SignalToNoise").change(function(){
+		var StN = this.value;
+		alert('STN = ' + StN );
+
+		for (g = 0; g < numGraphs; g++){
+			spectra[g].updateBins_StN(StN);
+		};
+
+		plotarea.data[0].x = hlike.x;
+		for(g=0; g < numGraphs; g++){
+	    	plotarea.data[(2*g)+1].x = spectra[g].x;
+	    	plotarea.data[(2*g)+1].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].x = spectra[g].x_mid;
+	    	plotarea.data[(2*g)+2].y = spectra[g].y;
+	    	plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
+	    	plotarea.layout.xaxis.title = spectra[g].xlabel();
+	    	plotarea.layout.yaxis.title = spectra[g].ylabel();
+
+	    };	
+	    Plotly.redraw(plotarea);
+
+
 	});
 
 
