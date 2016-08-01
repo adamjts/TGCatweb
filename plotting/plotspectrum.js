@@ -355,13 +355,16 @@ function Spectrum(rawdata){
     	var lastRow = 0;
     	var photon_count = 0;
 
+    	//this.x.push(0);
+    	//this.x_mid.push(0);
+
     	while(dataRemains){
     		//do the binning
 
     		//alert(photon_count + ' = ' + photon_count +  ' + ' + y_tmp[rowCounter]);
 
     		if (isNaN(y_tmp[rowCounter])){
-    			alert('problem... rowCounter=' + rowCounter + '\nPhotonCount: ' + photon_count + 'photon_min: ' + photon_min);
+    			alert('problem... rowCounter=' + rowCounter + '\nPhotonCount: ' + photon_count + 'photon_min: ' + photon_min + '\nlength of arr is: ' + y_tmp.length);
     			break;
     		};
 
@@ -370,22 +373,29 @@ function Spectrum(rawdata){
 
     		//alert(photon_count + ' = ' + photon_count +  ' + ' + y_tmp[rowCounter]);
 
-    		if (rowCounter%1000 == 0){
+    		if (rowCounter%500 == 0){
     			alert('row count: ' + rowCounter + '\nPhoton Count: ' + photon_count);
     		};
 
-    		if(photon_count > photon_min){
-    			this.x.push(x_tmp[lastRow]);
-    			this.x_mid.push(x_mid_tmp[lastRow]);
+    		if(photon_count >= photon_min){
+    			//this.x.push(x_tmp[lastRow]);
+    			//this.x_mid.push(x_mid_tmp[lastRow]);
+    			this.x.push(x_tmp[rowCounter]);
+    			this.x_mid.push(x_mid_tmp[rowCounter]);
     			this.y.push(y_tmp.slice(lastRow, rowCounter).reduce(function(a,b){return a+b}, 0));
 
     			lastRow = rowCounter;
     			photon_count = 0;
 
-    			if(y_tmp.slice(rowCounter, y_tmp.length).reduce(function(a,b){return a+b}, 0) < photon_min){
+    			var remaining_photons = 0;
+    			for(i = rowCounter;i < y_tmp.length; i++){
+    				remaining_photons = remaining_photons + y_tmp[i];
+    			};
+    			if (remaining_photons < photon_min ){
     				dataRemains = false;
     				break;
     			};
+
     		};
 
 
@@ -672,9 +682,10 @@ $(document).ready(function(){
 
 	$("#SignalToNoise").change(function(){
 		var StN = this.value;
-		alert('STN = ' + StN );
+		//alert('STN = ' + StN );
 
 		for (g = 0; g < numGraphs; g++){
+			alert('doing spectrum '+ g)
 			spectra[g].updateBins_StN(StN);
 		};
 
