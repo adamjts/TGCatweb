@@ -405,6 +405,8 @@ function Spectrum(rawdata){
 
     	};
 
+    	$("#binFactor").val("");
+
 
     };
 
