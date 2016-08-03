@@ -179,7 +179,7 @@ function Spectrum(rawdata){
 	switch (converter.x_type) {
 	case "wavelength":
 	    this.x = this.x_lo_in.map(converter.xfunc);
-	    //this.y = this.y_in.map(converter.yfunc); // I"M NOT SURE WHY THIS COMMAND USED TO BE HERE,
+	    //this.y = this.y_in.map(converter.yfunc); 
 	    // Prevent end of plot from hanging in air
 	    this.x.push(converter.xfunc(this.x_hi_in[-1]));
 	    this.y.push(0);
@@ -698,12 +698,17 @@ $(document).ready(function(){
         //check if this StN is a reasonable number:
         //It has to be less than the total detected photons for all graphs
         var acceptable_StN = true;
+        var error_message = '';
         if (isNaN(StN)){
+            //is it a number
             acceptable_StN = false;
+            error_message = error_message + '-Input needs to be a number\n';
         } else{
+            //are there enought detected photons in the spectra to make at least one bin
             for(g = 0; g< numGraphs; g++){
                 if( (StN*StN) >= (spectra[g].y_in.slice(0, spectra[g].y_in.length).reduce(function(a,b){return a+b}, 0) * 0.05 * exposureTime) ){
                     acceptable_StN = false;
+                    error_message = error_message + '-Input out of range for spectrum ' + linespectra[g].name + '\n';
                 };
             };
         };
@@ -727,7 +732,7 @@ $(document).ready(function(){
             };	
             Plotly.redraw(plotarea);
         } else{
-            alert('"'+StN+'"' + ' is not valid Signal-to-Noise');
+            alert('"'+StN+'"' + ' is not valid Signal-to-Noise:\n' + error_message);
             this.value = '';
         }
 
