@@ -11,6 +11,11 @@ data = [];
 
 function convertBinUnit(){
 
+	/*
+		Changes the display of the range of each bin's x-parameter. It takes the current bin unit and size, along with the desired
+	unit, and performs the conversion. It does NOT change the display of the graph.
+	*/
+
 
 	var newUnit = $('#xunit').val();
 	var currentVal = $('#binSize').html();
@@ -31,6 +36,10 @@ function convertBinUnit(){
 
 
 function updateBinSize(){
+
+	/*
+		Can be conbined with the previous function. Right now used after bin factor is changed.
+	*/
 	var binSize = $('#binFactor').val() * 0.05; //In Angstroms
 	var currentUnits = $('#bin_units').html();
 	var factor = {'Å': 1, 'nm': 0.1, 'micron': 1e-4, 'mm': 1e-7, 'cm': 1e-8, 'm':1e-10};
@@ -95,7 +104,14 @@ function convertunit(){
 
 
 function convertyunit(area){
-    var binSize = $("#binSize").html(); 
+
+	/*
+		Converts the y-units. NOT all of the unit conversions happen in this function--there were problems change the structure of the returned function.
+		So the scalar multiplication parts of the conversions happen in this function, but for unit conversions that involve looping through respective
+		wavelengths etc, the rest is carried out within the Spectrum object.
+	*/
+    //var binSize = $("#binSize").html(); 
+    var binSize = 0.05; // This is hard-coded because each time the y-value is changed, it reverts back to the original plot and then the binning is re-applied later
     var unit = $('#yunit').val();
 
     var h = 6.626e-34;
@@ -109,42 +125,6 @@ function convertyunit(area){
 		y_unit: unit,
 		yfunc : function(val){return val * f;},
 	};
-
-/*
-    if (unit == 'counts/X/s' || unit == 'counts/bin'){
-    	var factor = {'counts/X/s' : 1, 'counts/bin':(exposureTime*binSize)};
-    	var f = factor[unit];
-    	return {
-    		y_unit: unit,
-	    	yfunc: function(val){return val * f;},
-	    };
-	};
-	if (unit == 'Fy' || unit == 'Fy/X'){
-		var factor = {'Fy' : (binSize), 'Fy/X' : 1};
-    	var f = factor[unit];
-    	//return {
-    	//	y_unit: unit,
-	    //	yfunc: function(val){return val * f;},
-	    //};
-	    return {
-    		y_unit: unit,
-	    	yfunc: function(val){return val * f;},
-	    };
-	};
-
-	if (unit == 'FX' || unit == 'XFX'){ //-********************************THIS IS IN PROGRESS**************
-		var h = 6.626e-34;
-		var c = 3.0e8;
-		var joules_to_KeV = 6.242e15;
-		var factor = {'FX': h*c*joules_to_KeV, 'XFX': h*c*joules_to_KeV*binSize};
-		var f = factor[unit];
-		return{
-			y_unit: unit,
-			yfunc : function(val){return val * f;},
-		};
-
-	};
-	*/
 
 };
 
@@ -199,7 +179,7 @@ function Spectrum(rawdata){
 	switch (converter.x_type) {
 	case "wavelength":
 	    this.x = this.x_lo_in.map(converter.xfunc);
-	    //this.y = this.y_in.map(converter.yfunc); // I"M NOT SURE WHY THIS COMMAND USED TO BE HERE,
+	    //this.y = this.y_in.map(converter.yfunc); 
 	    // Prevent end of plot from hanging in air
 	    this.x.push(converter.xfunc(this.x_hi_in[-1]));
 	    this.y.push(0);
@@ -222,6 +202,11 @@ function Spectrum(rawdata){
     };
 
     this.update_ylabel_scale = function(){
+
+        /*
+            This is here to update the unit displayed in the y-axis label when the x-unit changes.
+        */
+
     	var xunit = $("#xunit").val();
     	var yunit = $("#yunit").val();
     	switch(yunit){
@@ -264,8 +249,6 @@ function Spectrum(rawdata){
     		break;
     	};
 
-    	//this.y = this.y_in.map(converter.yfunc);
-    	//this.y.push(0);
 
     	//This changes the label
     	switch(converter.y_unit){
@@ -276,7 +259,7 @@ function Spectrum(rawdata){
     			this.y_type = 'counts / bin'
     			break;
     		case 'Fy':
-    			this.y_type = 'photons / area / second'; //THIS SHOULD BE THE ACUAL NAME... Photons per area per second?
+    			this.y_type = 'photons / area / second'; 
     			break;
     		case 'Fy/X':
     			this.y_type = 'photons / area / second / ' + this.x_unit;
@@ -296,7 +279,10 @@ function Spectrum(rawdata){
     };
 
     this.updateBins = function(binFactor){ 
-    	//CODE
+    	
+    	/*
+			Changes bin size by constant factor. Bug: lower signal areas on the graph sometimes lead to larger bin sizes.
+    	*/
     	numloops = 0;
 
 
@@ -324,10 +310,91 @@ function Spectrum(rawdata){
     		//numloops++;
 
     		this.x.push(x_tmp[i*binFactor]);
-    		this.x_mid.push(x_mid_tmp[i*binFactor])
+    		this.x_mid.push(x_mid_tmp[i*binFactor]);
 
     		this.y.push(y_tmp.slice(i*binFactor, (i+1)*binFactor).reduce(function(a, b) {return a+b;}, 0));
     	};
+    };
+
+    this.updateBins_StN = function(StN){
+    	/*
+			Changes bin sizes by signal to noise. Not complete yet.
+
+            This function works if the y-units are converted first
+    	*/
+
+    	var photon_min = StN * StN;
+
+
+
+    	this.y = this.y_in;
+    	this.x = this.x_in;
+    	this.x_mid = this.x_mid_in;
+
+
+    	this.convert_to_yunit();
+    	this.convert_to_xunit();
+
+
+    	var x_tmp = this.x;
+    	var y_tmp = this.y;
+    	var x_mid_tmp = this.x_mid;
+
+
+    	this.x = [];
+    	this.y = [];
+    	this.x_mid = [];
+
+    	var dataRemains = true;
+
+    	var rowCounter = 0;
+    	var lastRow = 0;
+    	var photon_count = 0;
+
+
+
+        var photonArray = this.y_in.map(function(x) {return x * 0.05 * exposureTime});
+
+    	while(dataRemains){
+
+    		$('#display').html(rowCounter); // THIS IS JUST FOR DEBUGGING PURPOSES
+
+            photon_count = photon_count + (photonArray[rowCounter]);
+
+    		if(photon_count >= photon_min){
+    			//this.x.push(x_tmp[lastRow]);
+    			//this.x_mid.push(x_mid_tmp[lastRow]);
+    			this.x.push(x_tmp[rowCounter]);
+    			this.x_mid.push(x_mid_tmp[rowCounter]);
+    			this.y.push(y_tmp.slice(lastRow, rowCounter).reduce(function(a,b){return a+b}, 0));
+
+    			lastRow = rowCounter;
+    			photon_count = 0;
+
+    			//now check if there are enough remaining photons to continue looping through without reaching undefined indeces in the arrays.
+    			var remaining_photons = 0;
+    			for(i = rowCounter;i < photonArray.length; i++){
+    				//remaining_photons = remaining_photons + (y_tmp[i]*photonFactor);
+                    remaining_photons = remaining_photons + (photonArray[i]);
+    			};
+    			if (remaining_photons < photon_min ){
+    				dataRemains = false;
+    				break;
+    			};
+
+    		};
+
+
+    		rowCounter++
+
+
+
+    	};
+
+    	$("#binFactor").val("");
+        $("#binSize").html("<i style='color:#bfbfbf'>(varying)</i>");
+
+
     };
 
 };
@@ -394,12 +461,14 @@ function LineList(title, names, energies) {
 
 
 function resetBins(){
-	document.getElementById("binFactor").value = 1;
-	updateBinSize();
+	/*
+		This is a convenient function to have just to return all the data to standard display so that other conversion operations can be used.
+	*/
+	//document.getElementById("binFactor").value = 1;
+	//updateBinSize();
 	for (i=0 ; i < numGraphs; i++){
 		spectra[i].updateBins(1);
-	};
-	//spec1.updateBins(1); 
+	}; 
 
 };
 
@@ -500,20 +569,28 @@ $(document).ready(function(){
 	$('#xunit').change(function(){
  		//remember bin size and reset them so that we can do the unit conversions
  		var binFactor = document.getElementById("binFactor").value; 
+        var binStN = document.getElementById("SignalToNoise").value;
  		resetBins();		
-
 	    hlike.update();
 
+	    //set to correct units
 	    for (g=0; g < numGraphs; g++){
 	    	spectra[g].convert_to_xunit();
 	    };	
 
 		//re-apply the rebinning
-	    document.getElementById("binFactor").value = binFactor;
-	    updateBinSize();
-	    for (g = 0; g< numGraphs; g++){
-	    	spectra[g].updateBins(binFactor);
-	    };
+        if(isNaN(binStN) || binStN == ''){
+            document.getElementById("binFactor").value = binFactor;
+            updateBinSize();
+            for (g = 0; g< numGraphs; g++){
+                spectra[g].updateBins(binFactor);
+            };
+        };
+        if (isNaN(binFactor) || binFactor == ''){
+            for (g = 0; g< numGraphs ; g++){
+                spectra[g].updateBins_StN(binStN);
+            };
+        };
 
 		//replot
 		plotarea.data[0].x = hlike.x;
@@ -529,13 +606,16 @@ $(document).ready(function(){
 	    };	
 	    Plotly.redraw(plotarea);
 
+	    //Display the correct bin units
 	    convertBinUnit();
 
 	});
 
 	$('#yunit').change(function(){
-		//remember binsize and reset them so that we can do the unit conversions
-		var binSize = document.getElementById("binFactor").value;
+		//remember the binsize and reset them so that we can do the unit conversions
+
+		var binFactor = document.getElementById("binFactor").value;
+        var binStN = document.getElementById("SignalToNoise").value;
 		resetBins();
 		hlike.update();
 		for (g = 0; g < numGraphs; g++){
@@ -543,12 +623,26 @@ $(document).ready(function(){
 		};
 
 		//re-apply the binning
-		document.getElementById("binFactor").value = binSize;
-		updateBinSize();
-		for (g = 0 ; g< numGraphs ; g++){
-			spectra[g].updateBins(binSize);
-		};
 
+        //if the binning was by a constant factor then:
+        if(isNaN(binStN) || binStN == ''){
+      
+            document.getElementById("binFactor").value = binFactor;
+            updateBinSize();
+            for (g = 0 ; g< numGraphs ; g++){
+                spectra[g].updateBins(binFactor);
+            };
+        };
+        //if the binning was by Signal-to-Noise then:
+        if(isNaN(binFactor) || binFactor == ''){
+            for (g = 0; g < numGraphs; g++){
+                spectra[g].updateBins_StN(binStN);
+            };
+        };
+
+
+
+		//update the plot
 		plotarea.data[0].x = hlike.x;
 		for(g=0; g < numGraphs; g++){
 	    	plotarea.data[(2*g)+1].x = spectra[g].x;
@@ -569,13 +663,9 @@ $(document).ready(function(){
 	    Plotly.redraw(plotarea);
 	});
 
-	$('#binSize').change(function(){
-		binSize = this.val();
-	});
-
 	$("#binFactor").change(function(){
 
-			if ((this.value == 0) || (isNaN(this.value)) || (this.value > spectra[0].x.length) || (this.value%1 != 0)){
+		if ((this.value == 0) || (isNaN(this.value)) || (this.value > spectra[0].x.length) || (this.value%1 != 0)){
 			alert("Not a valid bin size");
 			this.value = "";
 		} else{
@@ -602,7 +692,60 @@ $(document).ready(function(){
 	});
 
 
+	$("#SignalToNoise").change(function(){
+		var StN = this.value;
+		
+        //check if this StN is a reasonable number:
+        //It has to be less than the total detected photons for all graphs
+        var acceptable_StN = true;
+        var error_message = '';
+        if (isNaN(StN)){
+            //is it a number
+            acceptable_StN = false;
+            error_message = error_message + '-Input needs to be a number\n';
+        } else{
+            //are there enought detected photons in the spectra to make at least one bin
+            for(g = 0; g< numGraphs; g++){
+                if( (StN*StN) >= (spectra[g].y_in.slice(0, spectra[g].y_in.length).reduce(function(a,b){return a+b}, 0) * 0.05 * exposureTime) ){
+                    acceptable_StN = false;
+                    error_message = error_message + '-Input out of range for spectrum ' + linespectra[g].name + '\n';
+                };
+            };
+        };
+
+        //Now if StN is reasonable, then do the transformations:
+
+        if(acceptable_StN){
+            for (g = 0; g < numGraphs; g++){
+                spectra[g].updateBins_StN(StN);
+            };
+
+            plotarea.data[0].x = hlike.x;
+            for(g=0; g < numGraphs; g++){
+                plotarea.data[(2*g)+1].x = spectra[g].x;
+                plotarea.data[(2*g)+1].y = spectra[g].y;
+                plotarea.data[(2*g)+2].x = spectra[g].x_mid;
+                plotarea.data[(2*g)+2].y = spectra[g].y;
+                plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
+                plotarea.layout.xaxis.title = spectra[g].xlabel();
+                plotarea.layout.yaxis.title = spectra[g].ylabel();
+            };	
+            Plotly.redraw(plotarea);
+        } else{
+            alert('"'+StN+'"' + ' is not valid Signal-to-Noise:\n' + error_message);
+            this.value = '';
+        }
+
+
+	});
+
+
 
 });
 
+
+/*
+PROBLEM:
+- conversions explode in y value after many changes... need to find bug.
+ */
 	
