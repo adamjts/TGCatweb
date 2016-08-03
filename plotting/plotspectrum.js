@@ -605,7 +605,7 @@ $(document).ready(function(){
 	$('#yunit').change(function(){
 		//remember the binsize and reset them so that we can do the unit conversions
 
-		var binSize = document.getElementById("binFactor").value;
+		var binFactor = document.getElementById("binFactor").value;
         var binStN = document.getElementById("SignalToNoise").value;
 		resetBins();
 		hlike.update();
@@ -618,14 +618,14 @@ $(document).ready(function(){
         //if the binning was by a constant factor then:
         if(isNaN(binStN) || binStN == ''){
       
-            document.getElementById("binFactor").value = binSize;
+            document.getElementById("binFactor").value = binFactor;
             updateBinSize();
             for (g = 0 ; g< numGraphs ; g++){
-                spectra[g].updateBins(binSize);
+                spectra[g].updateBins(binFactor);
             };
         };
         //if the binning was by Signal-to-Noise then:
-        if(isNaN(binSize) || binSize == ''){
+        if(isNaN(binFactor) || binFactor == ''){
             for (g = 0; g < numGraphs; g++){
                 spectra[g].updateBins_StN(binStN);
             };
