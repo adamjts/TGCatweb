@@ -110,7 +110,8 @@ function convertyunit(area){
 		So the scalar multiplication parts of the conversions happen in this function, but for unit conversions that involve looping through respective
 		wavelengths etc, the rest is carried out within the Spectrum object.
 	*/
-    var binSize = $("#binSize").html(); 
+    //var binSize = $("#binSize").html(); 
+    var binSize = 0.05; // This is hard-coded because each time the y-value is changed, it reverts back to the original plot and then the binning is re-applied later
     var unit = $('#yunit').val();
 
     var h = 6.626e-34;
@@ -391,6 +392,7 @@ function Spectrum(rawdata){
     	};
 
     	$("#binFactor").val("");
+        $("#binSize").html("<i style='color:#bfbfbf'>(varying)</i>");
 
 
     };
@@ -567,8 +569,8 @@ $(document).ready(function(){
 	$('#xunit').change(function(){
  		//remember bin size and reset them so that we can do the unit conversions
  		var binFactor = document.getElementById("binFactor").value; 
+        var binStN = document.getElementById("SignalToNoise").value;
  		resetBins();		
-
 	    hlike.update();
 
 	    //set to correct units
@@ -577,11 +579,18 @@ $(document).ready(function(){
 	    };	
 
 		//re-apply the rebinning
-	    document.getElementById("binFactor").value = binFactor;
-	    updateBinSize();
-	    for (g = 0; g< numGraphs; g++){
-	    	spectra[g].updateBins(binFactor);
-	    };
+        if(isNaN(binStN) || binStN == ''){
+            document.getElementById("binFactor").value = binFactor;
+            updateBinSize();
+            for (g = 0; g< numGraphs; g++){
+                spectra[g].updateBins(binFactor);
+            };
+        };
+        if (isNaN(binFactor) || binFactor == ''){
+            for (g = 0; g< numGraphs ; g++){
+                spectra[g].updateBins_StN(binStN);
+            };
+        };
 
 		//replot
 		plotarea.data[0].x = hlike.x;
@@ -685,24 +694,42 @@ $(document).ready(function(){
 
 	$("#SignalToNoise").change(function(){
 		var StN = this.value;
-		//alert('STN = ' + StN );
+		
+        //check if this StN is a reasonable number:
+        //It has to be less than the total detected photons for all graphs
+        var acceptable_StN = true;
+        if (isNaN(StN)){
+            acceptable_StN = false;
+        } else{
+            for(g = 0; g< numGraphs; g++){
+                if( (StN*StN) >= (spectra[g].y_in.slice(0, spectra[g].y_in.length).reduce(function(a,b){return a+b}, 0) * 0.05 * exposureTime) ){
+                    acceptable_StN = false;
+                };
+            };
+        };
 
-		for (g = 0; g < numGraphs; g++){
-			spectra[g].updateBins_StN(StN);
-		};
+        //Now if StN is reasonable, then do the transformations:
 
-		plotarea.data[0].x = hlike.x;
-		for(g=0; g < numGraphs; g++){
-	    	plotarea.data[(2*g)+1].x = spectra[g].x;
-	    	plotarea.data[(2*g)+1].y = spectra[g].y;
-	    	plotarea.data[(2*g)+2].x = spectra[g].x_mid;
-	    	plotarea.data[(2*g)+2].y = spectra[g].y;
-	    	plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
-	    	plotarea.layout.xaxis.title = spectra[g].xlabel();
-	    	plotarea.layout.yaxis.title = spectra[g].ylabel();
+        if(acceptable_StN){
+            for (g = 0; g < numGraphs; g++){
+                spectra[g].updateBins_StN(StN);
+            };
 
-	    };	
-	    Plotly.redraw(plotarea);
+            plotarea.data[0].x = hlike.x;
+            for(g=0; g < numGraphs; g++){
+                plotarea.data[(2*g)+1].x = spectra[g].x;
+                plotarea.data[(2*g)+1].y = spectra[g].y;
+                plotarea.data[(2*g)+2].x = spectra[g].x_mid;
+                plotarea.data[(2*g)+2].y = spectra[g].y;
+                plotarea.data[(2*g)+2].error_y.array = spectra[g].err;
+                plotarea.layout.xaxis.title = spectra[g].xlabel();
+                plotarea.layout.yaxis.title = spectra[g].ylabel();
+            };	
+            Plotly.redraw(plotarea);
+        } else{
+            alert('"'+StN+'"' + ' is not valid Signal-to-Noise');
+            this.value = '';
+        }
 
 
 	});
@@ -713,8 +740,7 @@ $(document).ready(function(){
 
 
 /*
-
 PROBLEM:
- - changing y/x unit after rebinning by S/N freezes the web page.
+- conversions explode in y value after many changes... need to find bug.
  */
 	
